@@ -26,6 +26,7 @@ server_src = files([
 ])
 
 server_header = files([
+	'bridge_api.h',
 	'module_processing.h',
 	'server_options.h'
 ])
@@ -44,11 +45,13 @@ server_resource = windows.compile_resources('NvRemixBridge.rc',
 	depend_files : ['NvRemixBridge.ico']
 )
 
+remixapi_include_path = include_directories('../api')
+
 server_exe = executable('NvRemixBridge', server_src, server_header, server_version, server_resource,
 sources             : [ bridge_version ],
 build_by_default    : (cpu_family == 'x86_64') ? true : false,
 dependencies        : [ thread_dep, util_dep, lib_version, tracy_dep ],
-include_directories : [ bridge_include_path, util_include_path ],
+include_directories : [ bridge_include_path, util_include_path, remixapi_include_path ],
 win_subsystem       : 'windows')
 
 

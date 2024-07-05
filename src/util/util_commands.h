@@ -38,6 +38,10 @@ namespace Commands {
     Bridge_Response,
     Bridge_DebugMessage,
 
+    Api_Present,
+    Api_SetConfigVariable,
+    Api_RegisterDevice,
+
     Bridge_SharedHeap_AddSeg,
     Bridge_SharedHeap_Alloc,
     Bridge_SharedHeap_Dealloc,
@@ -463,6 +467,10 @@ namespace Commands {
     case Bridge_Any: return "Any";
     case Bridge_Response: return "Response";
     case Bridge_DebugMessage: return "DebugMessage";
+
+    case Api_Present: return "ApiPresent";
+    case Api_SetConfigVariable: return "ApiSetConfigVariable";
+    case Api_RegisterDevice: return "ApiRegisterDevice";
 
     case Bridge_SharedHeap_AddSeg: return "SharedHeap_AddSeg";
     case Bridge_SharedHeap_Alloc: return "SharedHeap_Alloc";

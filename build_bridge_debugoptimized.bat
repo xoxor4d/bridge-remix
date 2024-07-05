@@ -27,4 +27,9 @@ IF NOT %ERRORLEVEL% == 0 GOTO :End
 powershell -command "& { . .\build_bridge.ps1; Build -Platform x86 -BuildFlavour debugoptimized -BuildSubDir _compDebugOptimized_x86 ; exit $LastExitCode }
 
 :End
+COPY "X:\git_repos_cod\bridge-remix\_output\.trex\NvRemixBridge.exe" "G:\COD4Modtools\.trex"
+COPY "X:\git_repos_cod\bridge-remix\_output\.trex\NvRemixBridge.pdb" "G:\COD4Modtools\.trex"
+COPY "X:\git_repos_cod\bridge-remix\_output\d3d9.dll" "G:\COD4Modtools"
+pause
 exit %ERRORLEVEL%
+

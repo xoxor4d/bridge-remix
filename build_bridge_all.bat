@@ -39,4 +39,5 @@ IF NOT %ERRORLEVEL% == 0 GOTO :End
 powershell -command "& { . .\build_bridge.ps1; Build -Platform x86 -BuildFlavour release -BuildSubDir _compRelease_x86 ; exit $LastExitCode }
 
 :End
+pause
 exit %ERRORLEVEL%

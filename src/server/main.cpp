@@ -52,6 +52,9 @@
 #include <map>
 #include <atomic>
 
+#include "remix_api/remix_c.h"
+#include "bridge_api.h"
+
 using namespace Commands;
 using namespace bridge_util;
 
@@ -251,6 +254,16 @@ static bool dumpLeakedObjects() {
 
   return anyLeaked;
 }
+
+//remixapi_HardcodedVertex makeVertex(float x, float y, float z) {
+//  remixapi_HardcodedVertex v = {
+//    {x,y,z},
+//     {0,0,-1},
+//     {0,0},
+//     0xFFFFFFFF,
+//  };
+//  return v;
+//}
 
 void ProcessDeviceCommandQueue() {
   // Loop until the client sends terminate instruction
@@ -2635,9 +2648,124 @@ void ProcessDeviceCommandQueue() {
         const int length = DeviceBridge::getReaderChannel().data->peek();
         void* text = nullptr;
         const int size = DeviceBridge::getReaderChannel().data->pull(&text);
-        std::stringstream ss;
+        /*std::stringstream ss;
         ss << "DebugMessage. i = " << i << ", length = " << length << " = " << size << ", text = '" << (char*) text << "'";
-        Logger::info(ss.str().c_str());
+        Logger::info(ss.str().c_str());*/
+
+        if (std::string_view((char*) text) == "light_setup") 
+        {
+          remixapi_LightInfoSphereEXT s = {};
+          {
+            s.sType = REMIXAPI_STRUCT_TYPE_LIGHT_INFO_SPHERE_EXT;
+            s.pNext = NULL;
+            s.position = { 0, 40, -30 };
+            s.radius = 1.0f;
+            s.shaping_hasvalue = FALSE;
+            s.shaping_value = { 0 };
+          };
+          remixapi_LightInfo l = {};
+          {
+            l.sType = REMIXAPI_STRUCT_TYPE_LIGHT_INFO;
+            l.pNext = &s;
+            l.hash = 0x3; // unique ID to match the light in this frame with one in previous frame
+            l.radiance = { 1000, 1200, 1500 };
+          };
+
+          if (api::g_scene_light) {
+            // recreate light if exists
+            remixapi_ErrorCode r = api::g_remix.DestroyLight(api::g_scene_light);
+            if (r != REMIXAPI_ERROR_CODE_SUCCESS) {
+              Logger::info("remix::DestroyLight() failed");
+            }
+          }
+
+          remixapi_ErrorCode r = api::g_remix.CreateLight(&l, &api::g_scene_light);
+          if (r != REMIXAPI_ERROR_CODE_SUCCESS) {
+            //printf("remix::CreateLight() failed: %d", r);
+            Logger::info("remix::CreateLight() failed: " + std::to_string(r));
+          }
+
+
+
+
+          /*remixapi_HardcodedVertex verts[] = {
+            makeVertex(5, -5, -20),
+            makeVertex(0, 5, -20),
+            makeVertex(-5, -5, -20),
+          };
+
+          remixapi_MeshInfoSurfaceTriangles triangles = {
+            verts,
+            ARRAYSIZE(verts),
+            NULL,
+            0,
+            FALSE,
+            { 0 },
+            NULL,
+          };
+
+          remixapi_MeshInfo meshInfo = {
+            REMIXAPI_STRUCT_TYPE_MESH_INFO,
+            NULL,
+            0x1,
+            &triangles,
+            1,
+          };
+
+          r = g_remix.CreateMesh(&meshInfo, &g_scene_mesh);
+          if (r != REMIXAPI_ERROR_CODE_SUCCESS) {
+            Logger::info("remix::CreateMesh() failed: " + std::to_string(r));
+          }*/
+
+        }
+        break;
+      }
+      case Api_Present:
+      {
+        /*remixapi_InstanceInfo meshInstanceInfo = {
+          REMIXAPI_STRUCT_TYPE_INSTANCE_INFO,
+          NULL,
+          0,
+          g_scene_mesh,
+          { {
+            {1,0,0,0},
+            {0,1,0,0},
+            {0,0,1,0},
+          } },
+          1,
+        };
+        g_remix.DrawInstance(&meshInstanceInfo);*/
+        api::g_remix.DrawLightInstance(api::g_scene_light);
+        break;
+      }
+      case Api_SetConfigVariable:
+      {
+        void* var_text = nullptr;
+        const int var_length = DeviceBridge::getReaderChannel().data->peek();
+        const int var_size = DeviceBridge::getReaderChannel().data->pull(&var_text);
+
+        void* value_text = nullptr;
+        const int value_length = DeviceBridge::getReaderChannel().data->peek();
+        const int value_size = DeviceBridge::getReaderChannel().data->pull(&value_text);
+
+        Logger::info("[API-SV] Config Var: \"" + std::string((char*) var_text) + "\" with lenght/size: " + std::to_string(var_length) + " / " + std::to_string(var_size));
+        Logger::info("|> Config Value: \"" + std::string((char*) value_text) + "\" with lenght/size: " + std::to_string(value_length) + " / " + std::to_string(value_size));
+
+        auto r = api::g_remix.SetConfigVariable((const char*) var_text, (const char*) value_text);
+        Logger::info("[API-SV] SetConfigVariable(): " + (!r ? "success" : "error: " + std::to_string(r)));
+        break;
+      }
+      case Api_RegisterDevice:
+      {
+        if (api::is_initialized()) {
+          //std::lock_guard<std::mutex> device_lock(api::g_device_mutex);
+          if (const auto dev = api::get_device(); dev) {
+            remixapi_ErrorCode r = api::g_remix.dxvk_RegisterD3D9Device(dev);
+            Logger::info("[API-SV] dxvk_RegisterD3D9Device(): " + (!r ? "success" : "error: " + std::to_string(r)));
+          } else {
+            Logger::warn("[API-SV] failed to get d3d9 device!");
+          }
+        }
         break;
       }
       case Bridge_Terminate:
@@ -2782,6 +2910,22 @@ bool InitializeD3D() {
     } else {
       Logger::info("D3D9 interface object creation succeeded!");
     }
+
+
+    // #TODO
+    // if (ServerOptions::getUseBridgeApi())
+
+    remixapi_ErrorCode status = remixapi_lib_loadRemixDllAndInitialize(L"d3d9.dll", &api::g_remix, &api::g_remix_dll);
+    if (status != REMIXAPI_ERROR_CODE_SUCCESS) {
+      Logger::err(format_string("[API-SV] RemixApi initialization failed: %d\n", status));
+    } else {
+      api::g_remix_initialized = true;
+      Logger::info("[API-SV] Initialized RemixApi.");
+    }
+
+
+
+
   } else {
     Logger::err(format_string("d3d9.dll loading failed: %ld\n", GetLastError()));
     return false;
