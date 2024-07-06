@@ -255,16 +255,6 @@ static bool dumpLeakedObjects() {
   return anyLeaked;
 }
 
-//remixapi_HardcodedVertex makeVertex(float x, float y, float z) {
-//  remixapi_HardcodedVertex v = {
-//    {x,y,z},
-//     {0,0,-1},
-//     {0,0},
-//     0xFFFFFFFF,
-//  };
-//  return v;
-//}
-
 void ProcessDeviceCommandQueue() {
   // Loop until the client sends terminate instruction
   bool done = false;
@@ -2648,94 +2638,87 @@ void ProcessDeviceCommandQueue() {
         const int length = DeviceBridge::getReaderChannel().data->peek();
         void* text = nullptr;
         const int size = DeviceBridge::getReaderChannel().data->pull(&text);
-        /*std::stringstream ss;
+        std::stringstream ss;
         ss << "DebugMessage. i = " << i << ", length = " << length << " = " << size << ", text = '" << (char*) text << "'";
-        Logger::info(ss.str().c_str());*/
-
-        if (std::string_view((char*) text) == "light_setup") 
-        {
-          remixapi_LightInfoSphereEXT s = {};
-          {
-            s.sType = REMIXAPI_STRUCT_TYPE_LIGHT_INFO_SPHERE_EXT;
-            s.pNext = NULL;
-            s.position = { 0, 40, -30 };
-            s.radius = 1.0f;
-            s.shaping_hasvalue = FALSE;
-            s.shaping_value = { 0 };
-          };
-          remixapi_LightInfo l = {};
-          {
-            l.sType = REMIXAPI_STRUCT_TYPE_LIGHT_INFO;
-            l.pNext = &s;
-            l.hash = 0x3; // unique ID to match the light in this frame with one in previous frame
-            l.radiance = { 1000, 1200, 1500 };
-          };
-
-          if (api::g_scene_light) {
-            // recreate light if exists
-            remixapi_ErrorCode r = api::g_remix.DestroyLight(api::g_scene_light);
-            if (r != REMIXAPI_ERROR_CODE_SUCCESS) {
-              Logger::info("remix::DestroyLight() failed");
-            }
-          }
-
-          remixapi_ErrorCode r = api::g_remix.CreateLight(&l, &api::g_scene_light);
-          if (r != REMIXAPI_ERROR_CODE_SUCCESS) {
-            //printf("remix::CreateLight() failed: %d", r);
-            Logger::info("remix::CreateLight() failed: " + std::to_string(r));
-          }
-
-
-
-
-          /*remixapi_HardcodedVertex verts[] = {
-            makeVertex(5, -5, -20),
-            makeVertex(0, 5, -20),
-            makeVertex(-5, -5, -20),
-          };
-
-          remixapi_MeshInfoSurfaceTriangles triangles = {
-            verts,
-            ARRAYSIZE(verts),
-            NULL,
-            0,
-            FALSE,
-            { 0 },
-            NULL,
-          };
-
-          remixapi_MeshInfo meshInfo = {
-            REMIXAPI_STRUCT_TYPE_MESH_INFO,
-            NULL,
-            0x1,
-            &triangles,
-            1,
-          };
-
-          r = g_remix.CreateMesh(&meshInfo, &g_scene_mesh);
-          if (r != REMIXAPI_ERROR_CODE_SUCCESS) {
-            Logger::info("remix::CreateMesh() failed: " + std::to_string(r));
-          }*/
-
-        }
+        Logger::info(ss.str().c_str());
         break;
       }
       case Api_Present:
       {
-        /*remixapi_InstanceInfo meshInstanceInfo = {
-          REMIXAPI_STRUCT_TYPE_INSTANCE_INFO,
-          NULL,
-          0,
-          g_scene_mesh,
-          { {
-            {1,0,0,0},
-            {0,1,0,0},
-            {0,0,1,0},
-          } },
-          1,
+        break;
+      }
+      case Api_CreateSphereLight:
+      {
+        // # TODO - add shaping support
+
+        PULL_U(sType);
+        PULL_I(radiance_x);
+        PULL_I(radiance_y);
+        PULL_I(radiance_z);
+        PULL(uint64_t, hash);
+
+        PULL_U(sphere_sType);
+        PULL_I(sphere_position_x);
+        PULL_I(sphere_position_y);
+        PULL_I(sphere_position_z);
+        PULL_I(sphere_radius);
+
+        // build 64 bit structs
+        remixapi_LightInfoSphereEXT s = {};
+        {
+          s.sType = (remixapi_StructType) sphere_sType;
+          s.pNext = nullptr;
+          s.position = { (float) sphere_position_x, (float) sphere_position_y, (float) sphere_position_z };
+          s.radius = (float) sphere_radius;
+          s.shaping_hasvalue = FALSE;
+          s.shaping_value = { 0 };
         };
-        g_remix.DrawInstance(&meshInstanceInfo);*/
-        api::g_remix.DrawLightInstance(api::g_scene_light);
+
+        remixapi_LightInfo l = {};
+        {
+          l.sType = (remixapi_StructType) sType;
+          l.pNext = &s;
+          l.hash = hash;
+          l.radiance = { (float) radiance_x, (float) radiance_y, (float) radiance_z };
+        }
+
+        remixapi_LightHandle temp_handle = nullptr;
+        remixapi_ErrorCode r = api::g_remix.CreateLight(&l, &temp_handle);
+        //Logger::info("[API-SV] CreateLight(): " + (!r ? "success" : "error: " + std::to_string(r)));
+
+        ServerMessage c(Commands::Bridge_Response, currentUID);
+        c.send_data((uint64_t) temp_handle);
+
+        //Logger::info("Api_CreateLight: light created with handle: " + std::to_string((uint64_t) temp_handle) + " with hash: " + std::to_string(hash));
+        //Logger::info("|> l.sType: " + std::to_string(l.sType));
+        //Logger::info("|> l.pNext: " + std::to_string((uint64_t) l.pNext));
+        //Logger::info("|> l.hash: " + std::to_string(l.hash));
+        //Logger::info("|> l.radiance: " + std::to_string(l.radiance.x) + " " + std::to_string(l.radiance.y) + " " + std::to_string(l.radiance.z));
+        //Logger::info("|> s offset: " + std::to_string((uint64_t) &s));
+        //Logger::info("|> s.sType: " + std::to_string(s.sType));
+        //Logger::info("|> s.position: " + std::to_string(s.position.x) + " " + std::to_string(s.position.y) + " " + std::to_string(s.position.z));
+        //Logger::info("|> s.radius: " + std::to_string(s.radius));
+        break;
+      }
+      case Api_DestroyLight:
+      {
+        PULL(uint64_t, light_handle);
+
+        if (light_handle) {
+          remixapi_ErrorCode r = api::g_remix.DestroyLight((remixapi_LightHandle) light_handle);
+          Logger::info("[API-SV] DestroyLight(): " + (!r ? "success" : "error: " + std::to_string(r)));
+        }
+        break;
+      }
+      case Api_DrawLightInstance:
+      {
+        PULL(uint64_t, light_handle);
+
+        if (light_handle) {
+          api::g_remix.DrawLightInstance((remixapi_LightHandle) light_handle);
+        } else {
+          Logger::info("[API-SV] DrawLightInstance(): invalid light_handle");
+        }
         break;
       }
       case Api_SetConfigVariable:

@@ -39,6 +39,9 @@ namespace Commands {
     Bridge_DebugMessage,
 
     Api_Present,
+    Api_CreateSphereLight,
+    Api_DestroyLight,
+    Api_DrawLightInstance,
     Api_SetConfigVariable,
     Api_RegisterDevice,
 
@@ -469,6 +472,9 @@ namespace Commands {
     case Bridge_DebugMessage: return "DebugMessage";
 
     case Api_Present: return "ApiPresent";
+    case Api_CreateSphereLight: return "ApiCreateSphereLight";
+    case Api_DestroyLight: return "ApiDestroyLight";
+    case Api_DrawLightInstance: return "DrawLightInstance";
     case Api_SetConfigVariable: return "ApiSetConfigVariable";
     case Api_RegisterDevice: return "ApiRegisterDevice";
 
