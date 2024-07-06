@@ -6,6 +6,33 @@
 #include "util_bridgecommand.h"
 #include "util_devicecommand.h"
 
+#define SEND_FLOAT(MSG, V) \
+  (MSG).send_data((int32_t) (V))
+
+#define SEND_FLOAT2D(MSG, V) \
+  (MSG).send_data((int32_t) (V).x); \
+  (MSG).send_data((int32_t) (V).y)
+
+#define SEND_FLOAT3D(MSG, V) \
+  (MSG).send_data((int32_t) (V).x); \
+  (MSG).send_data((int32_t) (V).y); \
+  (MSG).send_data((int32_t) (V).z)
+
+#define SEND_FLOAT4D(MSG, V) \
+  (MSG).send_data((int32_t) (V).x); \
+  (MSG).send_data((int32_t) (V).y); \
+  (MSG).send_data((int32_t) (V).z); \
+  (MSG).send_data((int32_t) (V).w)
+
+#define SEND_STYPE(MSG, T) \
+  (MSG).send_data((uint32_t) (T))
+
+#define SEND_U32(MSG, U32) \
+  (MSG).send_data((uint32_t) (U32))
+
+#define SEND_U64(MSG, U64) \
+  (MSG).send_data((uint64_t) (U64))
+
 namespace {
   void BRIDGEAPI_CALL bridgeapi_DebugPrint(const char* text) {
     ClientMessage command(Commands::Bridge_DebugMessage);
@@ -17,26 +44,29 @@ namespace {
     ClientMessage command(Commands::Api_Present);
   }
 
-  uint64_t BRIDGEAPI_CALL bridgeapi_CreateSphereLight(const x86::remixapi_LightInfo* info, x86::remixapi_LightInfoSphereEXT* sphere_info) {
+  uint64_t BRIDGEAPI_CALL bridgeapi_CreateSphereLight(const x86::remixapi_LightInfo* info, const x86::remixapi_LightInfoSphereEXT* sphere_info) {
     UID currentUID = 0;
     {
-      ClientMessage command(Commands::Api_CreateSphereLight);
-      currentUID = command.get_uid();
+      ClientMessage c(Commands::Api_CreateSphereLight);
+      currentUID = c.get_uid();
 
-      // send LightInfo struct
-      command.send_data((uint32_t) info->sType);
-      command.send_data((int32_t) info->radiance.x);
-      command.send_data((int32_t) info->radiance.y);
-      command.send_data((int32_t) info->radiance.z);
-      command.send_data((uint64_t) info->hash);
+      // LightInfo
+      SEND_STYPE(c, info->sType);
+      SEND_U64(c, info->hash);
+      SEND_FLOAT3D(c, info->radiance);
 
-      command.send_data((uint32_t) sphere_info->sType);
-      command.send_data((int32_t) sphere_info->position.x);
-      command.send_data((int32_t) sphere_info->position.y);
-      command.send_data((int32_t) sphere_info->position.z);
-      command.send_data((int32_t) sphere_info->radius);
+      // LightInfoSphereEXT
+      SEND_STYPE(c, sphere_info->sType);
+      SEND_FLOAT3D(c, sphere_info->position);
+      SEND_FLOAT(c, sphere_info->radius);
+      SEND_U32(c, sphere_info->shaping_hasvalue);
 
-      //command.send_data(sizeof(x86::remixapi_LightInfo), (void*) info);
+      if (sphere_info->shaping_hasvalue) {
+        SEND_FLOAT3D(c, sphere_info->shaping_value.direction);
+        SEND_FLOAT(c, sphere_info->shaping_value.coneAngleDegrees);
+        SEND_FLOAT(c, sphere_info->shaping_value.coneSoftness);
+        SEND_FLOAT(c, sphere_info->shaping_value.focusExponent);
+      }
     }
 
     //WAIT_FOR_SERVER_RESPONSE
@@ -54,13 +84,13 @@ namespace {
   }
 
   void BRIDGEAPI_CALL bridgeapi_DestroyLight(uint64_t handle) {
-    ClientMessage command(Commands::Api_DestroyLight);
-    command.send_data((uint64_t) handle);
+    ClientMessage c(Commands::Api_DestroyLight);
+    c.send_data((uint64_t) handle);
   }
 
   void BRIDGEAPI_CALL bridgeapi_DrawLightInstance(uint64_t handle) {
-    ClientMessage command(Commands::Api_DrawLightInstance);
-    command.send_data((uint64_t)handle);
+    ClientMessage c(Commands::Api_DrawLightInstance);
+    c.send_data((uint64_t)handle);
   }
 
   void BRIDGEAPI_CALL bridgeapi_SetConfigVariable(const char* var, const char* value) {
@@ -70,7 +100,7 @@ namespace {
   }
 
   void BRIDGEAPI_CALL bridgeapi_RegisterDevice() {
-    ClientMessage command(Commands::Api_RegisterDevice);
+    ClientMessage c(Commands::Api_RegisterDevice);
   }
 
   extern "C" {

@@ -100,6 +100,15 @@ using namespace bridge_util;
             const auto& name = map[name##Handle]; \
             assert(name != NULL)
 
+#define NVPULL_STYPE() (remixapi_StructType) DeviceBridge::get_data()
+#define NVPULL_I() (int32_t) DeviceBridge::get_data()
+#define NVPULL_U32() (uint32_t) DeviceBridge::get_data()
+#define NVPULL_U64() (uint64_t) DeviceBridge::get_data()
+#define NVPULL_FLOAT() (float) DeviceBridge::get_data()
+#define NVPULL_FLOAT2D() { NVPULL_FLOAT(), NVPULL_FLOAT() }
+#define NVPULL_FLOAT3D() { NVPULL_FLOAT(), NVPULL_FLOAT(), NVPULL_FLOAT() }
+#define NVPULL_FLOAT4D() { NVPULL_FLOAT(), NVPULL_FLOAT(), NVPULL_FLOAT(), NVPULL_FLOAT() }
+
 // NOTE: MSDN states HWNDs are safe to cross x86-->x64 boundary, and that a truncating cast should be used:
 // https://docs.microsoft.com/en-us/windows/win32/winprog64/interprocess-communication?redirectedfrom=MSDN
 #define TRUNCATE_HANDLE(type, input) (type)(size_t)(input)
@@ -2647,40 +2656,37 @@ void ProcessDeviceCommandQueue() {
       {
         break;
       }
+
+
+
       case Api_CreateSphereLight:
       {
-        // # TODO - add shaping support
-
-        PULL_U(sType);
-        PULL_I(radiance_x);
-        PULL_I(radiance_y);
-        PULL_I(radiance_z);
-        PULL(uint64_t, hash);
-
-        PULL_U(sphere_sType);
-        PULL_I(sphere_position_x);
-        PULL_I(sphere_position_y);
-        PULL_I(sphere_position_z);
-        PULL_I(sphere_radius);
-
-        // build 64 bit structs
-        remixapi_LightInfoSphereEXT s = {};
-        {
-          s.sType = (remixapi_StructType) sphere_sType;
-          s.pNext = nullptr;
-          s.position = { (float) sphere_position_x, (float) sphere_position_y, (float) sphere_position_z };
-          s.radius = (float) sphere_radius;
-          s.shaping_hasvalue = FALSE;
-          s.shaping_value = { 0 };
-        };
-
         remixapi_LightInfo l = {};
         {
-          l.sType = (remixapi_StructType) sType;
-          l.pNext = &s;
-          l.hash = hash;
-          l.radiance = { (float) radiance_x, (float) radiance_y, (float) radiance_z };
+          l.sType = NVPULL_STYPE();
+          // pNext
+          l.hash = NVPULL_U64();
+          l.radiance = NVPULL_FLOAT3D();
         }
+
+        remixapi_LightInfoSphereEXT s = {};
+        {
+          s.sType = NVPULL_STYPE();
+          s.pNext = nullptr;
+          s.position = NVPULL_FLOAT3D();
+          s.radius = NVPULL_FLOAT();
+          s.shaping_hasvalue = NVPULL_U32();
+
+          if (s.shaping_hasvalue) {
+            s.shaping_value.direction = NVPULL_FLOAT3D();
+            s.shaping_value.coneAngleDegrees = NVPULL_FLOAT();
+            s.shaping_value.coneSoftness = NVPULL_FLOAT();
+            s.shaping_value.focusExponent = NVPULL_FLOAT();
+          }
+        }
+
+        // remixapi_LightInfo
+        l.pNext = &s;
 
         remixapi_LightHandle temp_handle = nullptr;
         remixapi_ErrorCode r = api::g_remix.CreateLight(&l, &temp_handle);
