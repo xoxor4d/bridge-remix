@@ -7,22 +7,22 @@
 #include "util_devicecommand.h"
 
 #define SEND_FLOAT(MSG, V) \
-  (MSG).send_data((int32_t) (V))
+  (MSG).send_data((uint32_t) *(uint32_t*)(&(V)))
 
 #define SEND_FLOAT2D(MSG, V) \
-  (MSG).send_data((int32_t) (V).x); \
-  (MSG).send_data((int32_t) (V).y)
+  SEND_FLOAT(MSG, (V).x); \
+  SEND_FLOAT(MSG, (V).y)
 
 #define SEND_FLOAT3D(MSG, V) \
-  (MSG).send_data((int32_t) (V).x); \
-  (MSG).send_data((int32_t) (V).y); \
-  (MSG).send_data((int32_t) (V).z)
+  SEND_FLOAT(MSG, (V).x); \
+  SEND_FLOAT(MSG, (V).y); \
+  SEND_FLOAT(MSG, (V).z)
 
 #define SEND_FLOAT4D(MSG, V) \
-  (MSG).send_data((int32_t) (V).x); \
-  (MSG).send_data((int32_t) (V).y); \
-  (MSG).send_data((int32_t) (V).z); \
-  (MSG).send_data((int32_t) (V).w)
+  SEND_FLOAT(MSG, (V).x); \
+  SEND_FLOAT(MSG, (V).y); \
+  SEND_FLOAT(MSG, (V).z); \
+  SEND_FLOAT(MSG, (V).w)
 
 #define SEND_STYPE(MSG, T) \
   (MSG).send_data((uint32_t) (T))

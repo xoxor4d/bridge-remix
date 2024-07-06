@@ -150,13 +150,13 @@ extern "C" {
 
   typedef struct bridgeapi_Interface {
     bool initialized;
-    PFN_bridgeapi_DebugPrint		    DebugPrint;
-    PFN_bridgeapi_Present		        Present;
-    PFN_bridgeapi_CreateSphereLight CreateSphereLight;
-    PFN_bridgeapi_DestroyLight      DestroyLight;
-    PFN_bridgeapi_DrawLightInstance DrawLightInstance;
-    PFN_bridgeapi_SetConfigVariable SetConfigVariable;
-    PFN_bridgeapi_RegisterDevice    RegisterDevice;
+    PFN_bridgeapi_DebugPrint        DebugPrint;         // const char* text
+    PFN_bridgeapi_Present           Present;            // void
+    PFN_bridgeapi_CreateSphereLight CreateSphereLight;  // const x86::remixapi_LightInfo* info, const x86::remixapi_LightInfoSphereEXT* sphere_info
+    PFN_bridgeapi_DestroyLight      DestroyLight;       // uint64_t handle
+    PFN_bridgeapi_DrawLightInstance DrawLightInstance;  // uint64_t handle
+    PFN_bridgeapi_SetConfigVariable SetConfigVariable;  // const char* var, const char* value
+    PFN_bridgeapi_RegisterDevice    RegisterDevice;     // void
   } bridgeapi_Interface;
 
   BRIDGE_API BRIDGEAPI_ErrorCode __cdecl bridgeapi_InitFuncs(bridgeapi_Interface* out_result);
@@ -172,13 +172,13 @@ extern "C" {
 	if (hModule) {
 	  PROC func = GetProcAddress(hModule, "bridgeapi_InitFuncs");
 	  if (func) {
-	  	pfn_Initialize = (PFN_bridgeapi_InitFuncs)func;
+	  	pfn_Initialize = (PFN_bridgeapi_InitFuncs) func;
 	  }
 	  else {
 	  	return BRIDGEAPI_ERROR_CODE_GET_PROC_ADDRESS_FAILURE;
 	  }
 	  
-	  bridgeapi_Interface bridgeInterface = { false };
+	  bridgeapi_Interface bridgeInterface = { 0 };
 	  bridgeapi_ErrorCode status = pfn_Initialize(&bridgeInterface);
 	  if (status != BRIDGEAPI_ERROR_CODE_SUCCESS) {
 	  	return status;

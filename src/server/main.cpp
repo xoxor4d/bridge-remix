@@ -100,11 +100,12 @@ using namespace bridge_util;
             const auto& name = map[name##Handle]; \
             assert(name != NULL)
 
+// Pull without creating a local var
 #define NVPULL_STYPE() (remixapi_StructType) DeviceBridge::get_data()
 #define NVPULL_I() (int32_t) DeviceBridge::get_data()
 #define NVPULL_U32() (uint32_t) DeviceBridge::get_data()
 #define NVPULL_U64() (uint64_t) DeviceBridge::get_data()
-#define NVPULL_FLOAT() (float) DeviceBridge::get_data()
+#define NVPULL_FLOAT() *(float*)(&DeviceBridge::get_data())
 #define NVPULL_FLOAT2D() { NVPULL_FLOAT(), NVPULL_FLOAT() }
 #define NVPULL_FLOAT3D() { NVPULL_FLOAT(), NVPULL_FLOAT(), NVPULL_FLOAT() }
 #define NVPULL_FLOAT4D() { NVPULL_FLOAT(), NVPULL_FLOAT(), NVPULL_FLOAT(), NVPULL_FLOAT() }
@@ -2652,13 +2653,13 @@ void ProcessDeviceCommandQueue() {
         Logger::info(ss.str().c_str());
         break;
       }
+
+
+
       case Api_Present:
       {
         break;
       }
-
-
-
       case Api_CreateSphereLight:
       {
         remixapi_LightInfo l = {};
@@ -2689,7 +2690,7 @@ void ProcessDeviceCommandQueue() {
         l.pNext = &s;
 
         remixapi_LightHandle temp_handle = nullptr;
-        remixapi_ErrorCode r = api::g_remix.CreateLight(&l, &temp_handle);
+        /*remixapi_ErrorCode r =*/ api::g_remix.CreateLight(&l, &temp_handle);
         //Logger::info("[API-SV] CreateLight(): " + (!r ? "success" : "error: " + std::to_string(r)));
 
         ServerMessage c(Commands::Bridge_Response, currentUID);
@@ -2711,8 +2712,12 @@ void ProcessDeviceCommandQueue() {
         PULL(uint64_t, light_handle);
 
         if (light_handle) {
-          remixapi_ErrorCode r = api::g_remix.DestroyLight((remixapi_LightHandle) light_handle);
-          Logger::info("[API-SV] DestroyLight(): " + (!r ? "success" : "error: " + std::to_string(r)));
+          /*remixapi_ErrorCode r =*/ api::g_remix.DestroyLight((remixapi_LightHandle) light_handle);
+          /*if (r != REMIXAPI_ERROR_CODE_SUCCESS) {
+            Logger::info("[API-SV] DestroyLight(): failed = " + std::to_string(r));
+          }*/
+        } else {
+          Logger::info("[API-SV] DestroyLight(): invalid light_handle");
         }
         break;
       }
@@ -2737,11 +2742,11 @@ void ProcessDeviceCommandQueue() {
         const int value_length = DeviceBridge::getReaderChannel().data->peek();
         const int value_size = DeviceBridge::getReaderChannel().data->pull(&value_text);
 
-        Logger::info("[API-SV] Config Var: \"" + std::string((char*) var_text) + "\" with lenght/size: " + std::to_string(var_length) + " / " + std::to_string(var_size));
-        Logger::info("|> Config Value: \"" + std::string((char*) value_text) + "\" with lenght/size: " + std::to_string(value_length) + " / " + std::to_string(value_size));
+        //Logger::info("[API-SV] Config Var: \"" + std::string((char*) var_text) + "\" with len/size: " + std::to_string(var_length) + " / " + std::to_string(var_size));
+        //Logger::info("|> Config Value: \"" + std::string((char*) value_text) + "\" with len/size: " + std::to_string(value_length) + " / " + std::to_string(value_size));
 
         auto r = api::g_remix.SetConfigVariable((const char*) var_text, (const char*) value_text);
-        Logger::info("[API-SV] SetConfigVariable(): " + (!r ? "success" : "error: " + std::to_string(r)));
+        //Logger::info("[API-SV] SetConfigVariable(): " + (!r ? "success" : "error: " + std::to_string(r)));
         break;
       }
       case Api_RegisterDevice:
@@ -2757,6 +2762,9 @@ void ProcessDeviceCommandQueue() {
         }
         break;
       }
+
+
+
       case Bridge_Terminate:
       {
         done = true;
