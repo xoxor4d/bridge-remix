@@ -2656,10 +2656,39 @@ void ProcessDeviceCommandQueue() {
 
 
 
+
+
+
+
+
+
+      // ######################################################################################################
+      // ######################################################################################################
+      // ######################################################################################################
+      // ######################################################################################################
+      // ######################################################################################################
+      // ######################################################################################################
+      // ######################################################################################################
+      // ##################### here so I can quickly find it in the scrollbar map #############################
+      // ######################################################################################################
+      // ######################################################################################################
+      // ######################################################################################################
+      // ######################################################################################################
+      // ######################################################################################################
+      // ######################################################################################################
+      // ######################################################################################################
+
+
+
+
+
+
+
       case Api_Present:
       {
         break;
       }
+
       case Api_CreateSphereLight:
       {
         remixapi_LightInfo l = {};
@@ -2707,6 +2736,49 @@ void ProcessDeviceCommandQueue() {
         //Logger::info("|> s.radius: " + std::to_string(s.radius));
         break;
       }
+
+      case Api_CreateRectLight:
+      {
+        remixapi_LightInfo l = {};
+        {
+          l.sType = NVPULL_STYPE();
+          // pNext
+          l.hash = NVPULL_U64();
+          l.radiance = NVPULL_FLOAT3D();
+        }
+
+        remixapi_LightInfoRectEXT r = {};
+        {
+          r.sType = NVPULL_STYPE();
+          r.pNext = nullptr;
+          r.position = NVPULL_FLOAT3D();
+          r.xAxis = NVPULL_FLOAT3D();
+          r.xSize = NVPULL_FLOAT();
+          r.yAxis = NVPULL_FLOAT3D();
+          r.ySize = NVPULL_FLOAT();
+          r.direction = NVPULL_FLOAT3D();
+          r.shaping_hasvalue = NVPULL_U32();
+
+          if (r.shaping_hasvalue) {
+            r.shaping_value.direction = NVPULL_FLOAT3D();
+            r.shaping_value.coneAngleDegrees = NVPULL_FLOAT();
+            r.shaping_value.coneSoftness = NVPULL_FLOAT();
+            r.shaping_value.focusExponent = NVPULL_FLOAT();
+          }
+        }
+
+        // remixapi_LightInfo
+        l.pNext = &r;
+
+        remixapi_LightHandle temp_handle = nullptr;
+        /*remixapi_ErrorCode r =*/ api::g_remix.CreateLight(&l, &temp_handle);
+        //Logger::info("[API-SV] CreateLight(): " + (!r ? "success" : "error: " + std::to_string(r)));
+
+        ServerMessage c(Commands::Bridge_Response, currentUID);
+        c.send_data((uint64_t) temp_handle);
+        break;
+      }
+
       case Api_DestroyLight:
       {
         PULL(uint64_t, light_handle);
@@ -2732,6 +2804,7 @@ void ProcessDeviceCommandQueue() {
         }
         break;
       }
+
       case Api_SetConfigVariable:
       {
         void* var_text = nullptr;
@@ -2749,6 +2822,7 @@ void ProcessDeviceCommandQueue() {
         //Logger::info("[API-SV] SetConfigVariable(): " + (!r ? "success" : "error: " + std::to_string(r)));
         break;
       }
+
       case Api_RegisterDevice:
       {
         if (api::is_initialized()) {

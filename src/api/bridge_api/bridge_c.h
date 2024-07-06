@@ -126,6 +126,23 @@ extern "C" {
       remixapi_LightInfoLightShaping shaping_value;
     } remixapi_LightInfoSphereEXT;
 
+    typedef struct remixapi_LightInfoRectEXT {
+      remixapi_StructType            sType;
+      //void* pNext;
+      remixapi_Float3D               position;
+      // The X axis of the Rect Light. Must be normalized and orthogonal to the Y and direction axes.
+      remixapi_Float3D               xAxis;
+      float                          xSize;
+      // The Y axis of the Rect Light. Must be normalized and orthogonal to the X and direction axes.
+      remixapi_Float3D               yAxis;
+      float                          ySize;
+      // The direction the Rect Light is pointing in, should match the Shaping direction if present.
+      // Must be normalized and orthogonal to the X and Y axes.
+      remixapi_Float3D               direction;
+      remixapi_Bool                  shaping_hasvalue;
+      remixapi_LightInfoLightShaping shaping_value;
+    } remixapi_LightInfoRectEXT;
+
     typedef struct remixapi_LightInfo {
       remixapi_StructType             sType;
       //void* pNext;
@@ -143,6 +160,7 @@ extern "C" {
   typedef void(BRIDGEAPI_PTR* PFN_bridgeapi_DebugPrint)(const char* text);
   typedef void(BRIDGEAPI_PTR* PFN_bridgeapi_Present)(void);
   typedef uint64_t(BRIDGEAPI_PTR* PFN_bridgeapi_CreateSphereLight)(const x86::remixapi_LightInfo* info, const x86::remixapi_LightInfoSphereEXT* sphere_info);
+  typedef uint64_t(BRIDGEAPI_PTR* PFN_bridgeapi_CreateRectLight)(const x86::remixapi_LightInfo* info, const x86::remixapi_LightInfoRectEXT* rect_info);
   typedef void(BRIDGEAPI_PTR* PFN_bridgeapi_DestroyLight)(uint64_t handle);
   typedef void(BRIDGEAPI_PTR* PFN_bridgeapi_DrawLightInstance)(uint64_t handle);
   typedef void(BRIDGEAPI_PTR* PFN_bridgeapi_SetConfigVariable)(const char* var, const char* value);
@@ -152,10 +170,11 @@ extern "C" {
     bool initialized;
     PFN_bridgeapi_DebugPrint        DebugPrint;         // const char* text
     PFN_bridgeapi_Present           Present;            // void
-    PFN_bridgeapi_CreateSphereLight CreateSphereLight;  // const x86::remixapi_LightInfo* info, const x86::remixapi_LightInfoSphereEXT* sphere_info
+    PFN_bridgeapi_CreateSphereLight CreateSphereLight;  // x86::remixapi_LightInfo* info --- x86::remixapi_LightInfoSphereEXT* sphere_info
+    PFN_bridgeapi_CreateRectLight   CreateRectLight;    // x86::remixapi_LightInfo* info --- x86::remixapi_LightInfoRectEXT* rect_info
     PFN_bridgeapi_DestroyLight      DestroyLight;       // uint64_t handle
     PFN_bridgeapi_DrawLightInstance DrawLightInstance;  // uint64_t handle
-    PFN_bridgeapi_SetConfigVariable SetConfigVariable;  // const char* var, const char* value
+    PFN_bridgeapi_SetConfigVariable SetConfigVariable;  // const char* var --- const char* value
     PFN_bridgeapi_RegisterDevice    RegisterDevice;     // void
   } bridgeapi_Interface;
 

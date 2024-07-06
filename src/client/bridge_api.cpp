@@ -83,6 +83,49 @@ namespace {
     }
   }
 
+  uint64_t BRIDGEAPI_CALL bridgeapi_CreateRectLight(const x86::remixapi_LightInfo* info, const x86::remixapi_LightInfoRectEXT* rect_info) {
+    UID currentUID = 0;
+    {
+      ClientMessage c(Commands::Api_CreateRectLight);
+      currentUID = c.get_uid();
+
+      // LightInfo
+      SEND_STYPE(c, info->sType);
+      SEND_U64(c, info->hash);
+      SEND_FLOAT3D(c, info->radiance);
+
+      // LightInfoRectEXT
+      SEND_STYPE(c, rect_info->sType);
+      SEND_FLOAT3D(c, rect_info->position);
+      SEND_FLOAT3D(c, rect_info->xAxis);
+      SEND_FLOAT(c, rect_info->xSize);
+      SEND_FLOAT3D(c, rect_info->yAxis);
+      SEND_FLOAT(c, rect_info->ySize);
+      SEND_FLOAT3D(c, rect_info->direction);
+      SEND_U32(c, rect_info->shaping_hasvalue);
+
+      if (rect_info->shaping_hasvalue) {
+        SEND_FLOAT3D(c, rect_info->shaping_value.direction);
+        SEND_FLOAT(c, rect_info->shaping_value.coneAngleDegrees);
+        SEND_FLOAT(c, rect_info->shaping_value.coneSoftness);
+        SEND_FLOAT(c, rect_info->shaping_value.focusExponent);
+      }
+    }
+
+    //WAIT_FOR_SERVER_RESPONSE
+    {
+      const uint32_t timeoutMs = GlobalOptions::getAckTimeout();
+      if (Result::Success != DeviceBridge::waitForCommand(Commands::Bridge_Response, timeoutMs, nullptr, true, currentUID)) {
+        Logger::err("CreateLight()" " failed with: no response from server.");
+        return 0;
+      }
+
+      uint64_t res = DeviceBridge::get_data();
+      DeviceBridge::pop_front();
+      return res;
+    }
+  }
+
   void BRIDGEAPI_CALL bridgeapi_DestroyLight(uint64_t handle) {
     ClientMessage c(Commands::Api_DestroyLight);
     c.send_data((uint64_t) handle);
@@ -113,6 +156,7 @@ namespace {
         interf.DebugPrint = bridgeapi_DebugPrint;
         interf.Present = bridgeapi_Present;
         interf.CreateSphereLight = bridgeapi_CreateSphereLight;
+        interf.CreateRectLight = bridgeapi_CreateRectLight;
         interf.DestroyLight = bridgeapi_DestroyLight;
         interf.DrawLightInstance = bridgeapi_DrawLightInstance;
         interf.SetConfigVariable = bridgeapi_SetConfigVariable;

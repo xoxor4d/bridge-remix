@@ -40,6 +40,7 @@ namespace Commands {
 
     Api_Present,
     Api_CreateSphereLight,
+    Api_CreateRectLight,
     Api_DestroyLight,
     Api_DrawLightInstance,
     Api_SetConfigVariable,
@@ -473,6 +474,7 @@ namespace Commands {
 
     case Api_Present: return "ApiPresent";
     case Api_CreateSphereLight: return "ApiCreateSphereLight";
+    case Api_CreateRectLight: return "ApiCreateRectLight";
     case Api_DestroyLight: return "ApiDestroyLight";
     case Api_DrawLightInstance: return "DrawLightInstance";
     case Api_SetConfigVariable: return "ApiSetConfigVariable";
