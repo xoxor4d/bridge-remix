@@ -2850,6 +2850,35 @@ void ProcessDeviceCommandQueue() {
         break;
       }
 
+      case Api_CreateDistantLight:
+      {
+        remixapi_LightInfo l = {};
+        {
+          l.sType = NVPULL_STYPE();
+          // pNext
+          l.hash = NVPULL_U64();
+          l.radiance = NVPULL_FLOAT3D();
+        }
+
+        remixapi_LightInfoDistantEXT d = {};
+        {
+          d.sType = NVPULL_STYPE();
+          d.pNext = nullptr;
+          d.direction = NVPULL_FLOAT3D();
+          d.angularDiameterDegrees = NVPULL_FLOAT();
+        }
+
+        // remixapi_LightInfo
+        l.pNext = &d;
+
+        remixapi_LightHandle temp_handle = nullptr;
+        api::g_remix.CreateLight(&l, &temp_handle);
+
+        ServerMessage c(Commands::Bridge_Response, currentUID);
+        c.send_data((uint64_t) temp_handle);
+        break;
+      }
+
       case Api_DestroyLight:
       {
         PULL(uint64_t, light_handle);

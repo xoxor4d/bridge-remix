@@ -170,6 +170,29 @@ namespace {
     return result;
   }
 
+  uint64_t BRIDGEAPI_CALL bridgeapi_CreateDistantLight(const x86::remixapi_LightInfo* info, const x86::remixapi_LightInfoDistantEXT* dist_info) {
+    UID currentUID = 0;
+    {
+      ClientMessage c(Commands::Api_CreateDistantLight);
+      currentUID = c.get_uid();
+
+      // LightInfo
+      SEND_STYPE(c, info->sType);
+      SEND_U64(c, info->hash);
+      SEND_FLOAT3D(c, info->radiance);
+
+      // LightInfoDistantEXT
+      SEND_STYPE(c, dist_info->sType);
+      SEND_FLOAT3D(c, dist_info->direction);
+      SEND_FLOAT(c, dist_info->angularDiameterDegrees);
+    }
+
+    WAIT_FOR_SERVER_RESPONSE("CreateLight()", 0, currentUID);
+    uint64_t result = DeviceBridge::get_data();
+    DeviceBridge::pop_front();
+    return result;
+  }
+
   void BRIDGEAPI_CALL bridgeapi_DestroyLight(uint64_t handle) {
     ClientMessage c(Commands::Api_DestroyLight);
     c.send_data((uint64_t) handle);
@@ -203,6 +226,7 @@ namespace {
         interf.CreateRectLight = bridgeapi_CreateRectLight;
         interf.CreateDiskLight = bridgeapi_CreateDiscLight;
         interf.CreateCylinderLight = bridgeapi_CreateCylinderLight;
+        interf.CreateDistantLight = bridgeapi_CreateDistantLight;
         interf.DestroyLight = bridgeapi_DestroyLight;
         interf.DrawLightInstance = bridgeapi_DrawLightInstance;
         interf.SetConfigVariable = bridgeapi_SetConfigVariable;
