@@ -28,7 +28,7 @@
 
 namespace Commands {
   // The complete set of D3D9 interfaces
-  enum D3D9Command: uint16_t {
+  enum D3D9Command : uint16_t {
     Bridge_Terminate = std::numeric_limits<uint16_t>::max(),
     Bridge_Invalid = 0,
     Bridge_Syn,
@@ -41,6 +41,7 @@ namespace Commands {
     Api_Present,
     Api_CreateSphereLight,
     Api_CreateRectLight,
+    Api_CreateDiskLight,
     Api_DestroyLight,
     Api_DrawLightInstance,
     Api_SetConfigVariable,
@@ -475,6 +476,7 @@ namespace Commands {
     case Api_Present: return "ApiPresent";
     case Api_CreateSphereLight: return "ApiCreateSphereLight";
     case Api_CreateRectLight: return "ApiCreateRectLight";
+    case Api_CreateDiskLight: return "ApiCreateDiskLight";
     case Api_DestroyLight: return "ApiDestroyLight";
     case Api_DrawLightInstance: return "DrawLightInstance";
     case Api_SetConfigVariable: return "ApiSetConfigVariable";

@@ -69,18 +69,10 @@ namespace {
       }
     }
 
-    //WAIT_FOR_SERVER_RESPONSE
-    {
-      const uint32_t timeoutMs = GlobalOptions::getAckTimeout();
-      if (Result::Success != DeviceBridge::waitForCommand(Commands::Bridge_Response, timeoutMs, nullptr, true, currentUID)) {
-        Logger::err("CreateLight()" " failed with: no response from server.");
-        return 0;
-      }
-
-      uint64_t res = DeviceBridge::get_data();
-      DeviceBridge::pop_front();
-      return res;
-    }
+    WAIT_FOR_SERVER_RESPONSE("CreateLight()", 0, currentUID);
+    uint64_t result = DeviceBridge::get_data();
+    DeviceBridge::pop_front();
+    return result;
   }
 
   uint64_t BRIDGEAPI_CALL bridgeapi_CreateRectLight(const x86::remixapi_LightInfo* info, const x86::remixapi_LightInfoRectEXT* rect_info) {
@@ -112,18 +104,45 @@ namespace {
       }
     }
 
-    //WAIT_FOR_SERVER_RESPONSE
-    {
-      const uint32_t timeoutMs = GlobalOptions::getAckTimeout();
-      if (Result::Success != DeviceBridge::waitForCommand(Commands::Bridge_Response, timeoutMs, nullptr, true, currentUID)) {
-        Logger::err("CreateLight()" " failed with: no response from server.");
-        return 0;
-      }
+    WAIT_FOR_SERVER_RESPONSE("CreateLight()", 0, currentUID);
+    uint64_t result = DeviceBridge::get_data();
+    DeviceBridge::pop_front();
+    return result;
+  }
 
-      uint64_t res = DeviceBridge::get_data();
-      DeviceBridge::pop_front();
-      return res;
+  uint64_t BRIDGEAPI_CALL bridgeapi_CreateDiscLight(const x86::remixapi_LightInfo* info, const x86::remixapi_LightInfoDiskEXT* disk_info) {
+    UID currentUID = 0;
+    {
+      ClientMessage c(Commands::Api_CreateDiskLight);
+      currentUID = c.get_uid();
+
+      // LightInfo
+      SEND_STYPE(c, info->sType);
+      SEND_U64(c, info->hash);
+      SEND_FLOAT3D(c, info->radiance);
+
+      // LightInfoDiskEXT
+      SEND_STYPE(c, disk_info->sType);
+      SEND_FLOAT3D(c, disk_info->position);
+      SEND_FLOAT3D(c, disk_info->xAxis);
+      SEND_FLOAT(c, disk_info->xRadius);
+      SEND_FLOAT3D(c, disk_info->yAxis);
+      SEND_FLOAT(c, disk_info->yRadius);
+      SEND_FLOAT3D(c, disk_info->direction);
+      SEND_U32(c, disk_info->shaping_hasvalue);
+
+      if (disk_info->shaping_hasvalue) {
+        SEND_FLOAT3D(c, disk_info->shaping_value.direction);
+        SEND_FLOAT(c, disk_info->shaping_value.coneAngleDegrees);
+        SEND_FLOAT(c, disk_info->shaping_value.coneSoftness);
+        SEND_FLOAT(c, disk_info->shaping_value.focusExponent);
+      }
     }
+
+    WAIT_FOR_SERVER_RESPONSE("CreateLight()", 0, currentUID);
+    uint64_t result = DeviceBridge::get_data();
+    DeviceBridge::pop_front();
+    return result;
   }
 
   void BRIDGEAPI_CALL bridgeapi_DestroyLight(uint64_t handle) {
@@ -157,6 +176,7 @@ namespace {
         interf.Present = bridgeapi_Present;
         interf.CreateSphereLight = bridgeapi_CreateSphereLight;
         interf.CreateRectLight = bridgeapi_CreateRectLight;
+        interf.CreateDiskLight = bridgeapi_CreateDiscLight;
         interf.DestroyLight = bridgeapi_DestroyLight;
         interf.DrawLightInstance = bridgeapi_DrawLightInstance;
         interf.SetConfigVariable = bridgeapi_SetConfigVariable;
