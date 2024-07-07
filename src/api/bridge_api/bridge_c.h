@@ -264,6 +264,7 @@ extern "C" {
 
   typedef void(BRIDGEAPI_PTR* PFN_bridgeapi_DebugPrint)(const char* text);
   typedef uint64_t(BRIDGEAPI_PTR* PFN_bridgeapi_CreateTriangleMesh)(const x86::remixapi_MeshInfo* info);
+  typedef void(BRIDGEAPI_PTR* PFN_bridgeapi_DestroyMesh)(uint64_t handle);
   typedef void(BRIDGEAPI_PTR* PFN_bridgeapi_DrawMeshInstance)(uint64_t handle, const x86::remixapi_Transform* t, x86::remixapi_Bool double_sided);
   typedef uint64_t(BRIDGEAPI_PTR* PFN_bridgeapi_CreateSphereLight)(const x86::remixapi_LightInfo* info, const x86::remixapi_LightInfoSphereEXT* sphere_info);
   typedef uint64_t(BRIDGEAPI_PTR* PFN_bridgeapi_CreateRectLight)(const x86::remixapi_LightInfo* info, const x86::remixapi_LightInfoRectEXT* rect_info);
@@ -279,6 +280,7 @@ extern "C" {
     bool initialized;
     PFN_bridgeapi_DebugPrint          DebugPrint;            // const char* text
     PFN_bridgeapi_CreateTriangleMesh  CreateTriangleMesh;    // x86::remixapi_MeshInfo* info
+    PFN_bridgeapi_DestroyMesh         DestroyMesh;           // uint64_t handle
     PFN_bridgeapi_DrawMeshInstance    DrawMeshInstance;      // uint64_t handle --- x86::remixapi_Transform* t --- x86::remixapi_Bool double_sided
     PFN_bridgeapi_CreateSphereLight   CreateSphereLight;     // x86::remixapi_LightInfo* info --- x86::remixapi_LightInfoSphereEXT* sphere_info
     PFN_bridgeapi_CreateRectLight     CreateRectLight;       // x86::remixapi_LightInfo* info --- x86::remixapi_LightInfoRectEXT* rect_info
@@ -316,7 +318,7 @@ extern "C" {
 	  	return status;
 	  }
 
-    bridgeInterface.initialized = true;
+	  bridgeInterface.initialized = true;
 	  *out_bridgeInterface = bridgeInterface;
 	  return status;
 	}

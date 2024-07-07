@@ -98,6 +98,11 @@ namespace {
     return result;
   }
 
+  void BRIDGEAPI_CALL bridgeapi_DestroyMesh(uint64_t handle) {
+    ClientMessage c(Commands::Api_DestroyMesh);
+    SEND_U64(c, handle);
+  }
+
   void BRIDGEAPI_CALL bridgeapi_DrawMeshInstance(uint64_t handle, const x86::remixapi_Transform* t, x86::remixapi_Bool double_sided) {
     ClientMessage c(Commands::Api_DrawMeshInstance);
     SEND_U64(c, handle);
@@ -262,12 +267,12 @@ namespace {
 
   void BRIDGEAPI_CALL bridgeapi_DestroyLight(uint64_t handle) {
     ClientMessage c(Commands::Api_DestroyLight);
-    c.send_data((uint64_t) handle);
+    SEND_U64(c, handle);
   }
 
   void BRIDGEAPI_CALL bridgeapi_DrawLightInstance(uint64_t handle) {
     ClientMessage c(Commands::Api_DrawLightInstance);
-    c.send_data((uint64_t)handle);
+    SEND_U64(c, handle);
   }
 
   void BRIDGEAPI_CALL bridgeapi_SetConfigVariable(const char* var, const char* value) {
@@ -289,6 +294,7 @@ namespace {
       {
         interf.DebugPrint = bridgeapi_DebugPrint;
         interf.CreateTriangleMesh = bridgeapi_CreateTriangleMesh;
+        interf.DestroyMesh = bridgeapi_DestroyMesh;
         interf.DrawMeshInstance = bridgeapi_DrawMeshInstance;
         interf.CreateSphereLight = bridgeapi_CreateSphereLight;
         interf.CreateRectLight = bridgeapi_CreateRectLight;

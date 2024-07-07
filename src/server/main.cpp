@@ -2747,6 +2747,21 @@ void ProcessDeviceCommandQueue() {
         break;
       }
 
+      case Api_DestroyMesh:
+      {
+        PULL(uint64_t, mesh_handle);
+
+        if (mesh_handle) {
+          /*remixapi_ErrorCode r =*/ api::g_remix.DestroyMesh((remixapi_MeshHandle) mesh_handle);
+          /*if (r != REMIXAPI_ERROR_CODE_SUCCESS) {
+            Logger::info("[API-SV] DestroyLight(): failed = " + std::to_string(r));
+          }*/
+        } else {
+          Logger::info("[API-SV] DestroyMesh(): invalid light_handle");
+        }
+        break;
+      }
+
       case Api_DrawMeshInstance:
       {
         PULL(uint64_t, mesh_handle);

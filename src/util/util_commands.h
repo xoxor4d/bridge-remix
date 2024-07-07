@@ -39,6 +39,7 @@ namespace Commands {
     Bridge_DebugMessage,
 
     Api_CreateTriangleMesh,
+    Api_DestroyMesh,
     Api_DrawMeshInstance,
     Api_CreateSphereLight,
     Api_CreateRectLight,
@@ -477,6 +478,7 @@ namespace Commands {
     case Bridge_DebugMessage: return "DebugMessage";
 
     case Api_CreateTriangleMesh: return "ApiCreateTriangleMesh";
+    case Api_DestroyMesh: return "ApiDestroyMesh";
     case Api_DrawMeshInstance: return "ApiDrawMeshInstance";
     case Api_CreateSphereLight: return "ApiCreateSphereLight";
     case Api_CreateRectLight: return "ApiCreateRectLight";
