@@ -42,6 +42,7 @@ namespace Commands {
     Api_CreateSphereLight,
     Api_CreateRectLight,
     Api_CreateDiskLight,
+    Api_CreateCylinderLight,
     Api_DestroyLight,
     Api_DrawLightInstance,
     Api_SetConfigVariable,
@@ -477,6 +478,7 @@ namespace Commands {
     case Api_CreateSphereLight: return "ApiCreateSphereLight";
     case Api_CreateRectLight: return "ApiCreateRectLight";
     case Api_CreateDiskLight: return "ApiCreateDiskLight";
+    case Api_CreateCylinderLight: return "ApiCreateCylinderLight";
     case Api_DestroyLight: return "ApiDestroyLight";
     case Api_DrawLightInstance: return "DrawLightInstance";
     case Api_SetConfigVariable: return "ApiSetConfigVariable";

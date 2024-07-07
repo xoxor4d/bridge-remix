@@ -2819,6 +2819,37 @@ void ProcessDeviceCommandQueue() {
         break;
       }
 
+      case Api_CreateCylinderLight:
+      {
+        remixapi_LightInfo l = {};
+        {
+          l.sType = NVPULL_STYPE();
+          // pNext
+          l.hash = NVPULL_U64();
+          l.radiance = NVPULL_FLOAT3D();
+        }
+
+        remixapi_LightInfoCylinderEXT cy = {};
+        {
+          cy.sType = NVPULL_STYPE();
+          cy.pNext = nullptr;
+          cy.position = NVPULL_FLOAT3D();
+          cy.radius = NVPULL_FLOAT();
+          cy.axis = NVPULL_FLOAT3D();
+          cy.axisLength = NVPULL_FLOAT();
+        }
+
+        // remixapi_LightInfo
+        l.pNext = &cy;
+
+        remixapi_LightHandle temp_handle = nullptr;
+        api::g_remix.CreateLight(&l, &temp_handle);
+
+        ServerMessage c(Commands::Bridge_Response, currentUID);
+        c.send_data((uint64_t) temp_handle);
+        break;
+      }
+
       case Api_DestroyLight:
       {
         PULL(uint64_t, light_handle);
