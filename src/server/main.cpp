@@ -2686,26 +2686,27 @@ void ProcessDeviceCommandQueue() {
 
       case Api_CreateTriangleMesh:
       {
-        remixapi_MeshInfo i = {};
+        remixapi_MeshInfo info = {};
         {
-          i.sType = NVPULL_STYPE();
+          info.sType = NVPULL_STYPE();
           // pNext
-          i.hash = NVPULL_U64();
-          i.surfaces_count = NVPULL_U32(); // surface count before surfaces
+          info.hash = NVPULL_U64();
+          info.surfaces_count = NVPULL_U32(); // surface count before surfaces
         }
 
-        std::vector<remixapi_MeshInfoSurfaceTriangles> t;
-        t.reserve(1024);
+        std::vector<remixapi_MeshInfoSurfaceTriangles> surfs;
+        surfs.reserve(8);
 
-        std::vector<remixapi_HardcodedVertex> verts;
-        verts.reserve(1024);
+        std::vector<std::vector<remixapi_HardcodedVertex>> verts;
+        std::vector<std::vector<uint32_t>> indices;
 
-        for (uint32_t s = 0u; s < i.surfaces_count; s++)
-        {
+        for (uint32_t s = 0u; s < info.surfaces_count; s++) {
+          // pull all vertices
+          verts.emplace_back(); // add new vector entry for current surface
+
           const auto vertex_count = NVPULL_U64();
-          for (uint64_t v = 0u; v < vertex_count; v++)
-          {
-            verts.emplace_back(remixapi_HardcodedVertex
+          for (uint64_t v = 0u; v < vertex_count; v++) {
+            verts.back().emplace_back(remixapi_HardcodedVertex
             {
               NVPULL_FLOAT3D(), // position
               NVPULL_FLOAT3D(), // normal
@@ -2714,23 +2715,32 @@ void ProcessDeviceCommandQueue() {
             });
           }
 
-          t.emplace_back(remixapi_MeshInfoSurfaceTriangles 
+          // pull all indices
+          indices.emplace_back(); // add new vector entry for current surface
+
+          const auto index_count = NVPULL_U64();
+          for (uint64_t i = 0u; i < index_count; i++) {
+            indices.back().emplace_back(NVPULL_U32());
+          }
+
+          // build the surface struct
+          surfs.emplace_back(remixapi_MeshInfoSurfaceTriangles 
           {
-            &verts[0],
+            verts.back().data(),
             vertex_count,
-            nullptr, //(uint32_t*) NVPULL_U64(), indices_values
-            NVPULL_U64(), // indices_count
+            indices.back().data(),
+            index_count,
             NVPULL_U32(), // skinning_hasvalue
             remixapi_MeshInfoSkinning {},
-            nullptr //(remixapi_MaterialHandle) NVPULL_U64()
+            (remixapi_MaterialHandle) NVPULL_U64()
           });
         }
 
         // remixapi_MeshInfo
-        i.surfaces_values = &t[0];
+        info.surfaces_values = surfs.data();
 
         remixapi_MeshHandle temp_handle = nullptr;
-        api::g_remix.CreateMesh(&i, &temp_handle);
+        api::g_remix.CreateMesh(&info, &temp_handle);
 
         ServerMessage c(Commands::Bridge_Response, currentUID);
         c.send_data((uint64_t) temp_handle);

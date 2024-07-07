@@ -46,33 +46,49 @@ namespace {
       ClientMessage c(Commands::Api_CreateTriangleMesh);
       currentUID = c.get_uid();
 
+      //Logger::info("bridgeapi_CreateTriangleMesh::");
+      //Logger::info("|> surface_count = " + std::to_string(info->surfaces_count));
+
       // remixapi_MeshInfo
       SEND_STYPE(c, info->sType);
       SEND_U64(c, info->hash);
+
+      // send each surface
       SEND_U32(c, info->surfaces_count); // send surface count before sending the surfaces
-      
-      for (uint32_t s = 0u; s < info->surfaces_count; s++)
+      for (uint32_t s = 0u; s < info->surfaces_count; s++) 
       {
-        SEND_U64(c, info->surfaces_values[s].vertices_count); // send vertex count before vertices
-        for (uint64_t v = 0u; v < info->surfaces_values[s].vertices_count; v++)
+        const auto& surf = info->surfaces_values[s];
+        //Logger::info("|> surface " + std::to_string(s));
+
+        // send vertices of the current surface
+        //Logger::info("|>> vertex count " + std::to_string(surf.vertices_count));
+        SEND_U64(c, surf.vertices_count); // send vertex count before vertices
+        for (uint64_t v = 0u; v < surf.vertices_count; v++)
         {
-          SEND_FLOAT(c, info->surfaces_values[s].vertices_values[v].position[0]);
-          SEND_FLOAT(c, info->surfaces_values[s].vertices_values[v].position[1]);
-          SEND_FLOAT(c, info->surfaces_values[s].vertices_values[v].position[2]);
+          const auto& vert = surf.vertices_values[v];
+          SEND_FLOAT(c, vert.position[0]);
+          SEND_FLOAT(c, vert.position[1]);
+          SEND_FLOAT(c, vert.position[2]);
 
-          SEND_FLOAT(c, info->surfaces_values[s].vertices_values[v].normal[0]);
-          SEND_FLOAT(c, info->surfaces_values[s].vertices_values[v].normal[1]);
-          SEND_FLOAT(c, info->surfaces_values[s].vertices_values[v].normal[2]);
+          SEND_FLOAT(c, vert.normal[0]);
+          SEND_FLOAT(c, vert.normal[1]);
+          SEND_FLOAT(c, vert.normal[2]);
 
-          SEND_FLOAT(c, info->surfaces_values[s].vertices_values[v].texcoord[0]);
-          SEND_FLOAT(c, info->surfaces_values[s].vertices_values[v].texcoord[1]);
+          SEND_FLOAT(c, vert.texcoord[0]);
+          SEND_FLOAT(c, vert.texcoord[1]);
 
-          SEND_U32(c, info->surfaces_values[s].vertices_values[v].color);
+          SEND_U32(c, vert.color);
         }
-        //SEND_U64(c, NULL); // uint32_t* indices_values # TODO
-        SEND_U64(c, info->surfaces_values[s].indices_count);
-        SEND_U32(c, info->surfaces_values[s].skinning_hasvalue);
-        //SEND_U64(c, NULL); // remixapi_MaterialHandle material
+
+        // send indices of the current surface
+        //Logger::info("|>> index count " + std::to_string(surf.indices_count));
+        SEND_U64(c, surf.indices_count); // send index count before indices
+        for (uint64_t i = 0u; i < surf.indices_count; i++) {
+          SEND_U32(c, surf.indices_values[i]);
+        }
+
+        SEND_U32(c, surf.skinning_hasvalue);
+        SEND_U64(c, (uint64_t) surf.material); // remixapi_MaterialHandle material
       }
     }
 
