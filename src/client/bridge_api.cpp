@@ -40,9 +40,60 @@ namespace {
     command.send_data(strlen(text), (void*) text);
   }
 
-  void BRIDGEAPI_CALL bridgeapi_Present() {
-    ClientMessage command(Commands::Api_Present);
+  uint64_t BRIDGEAPI_CALL bridgeapi_CreateTriangleMesh(const x86::remixapi_MeshInfo* info) {
+    UID currentUID = 0;
+    {
+      ClientMessage c(Commands::Api_CreateTriangleMesh);
+      currentUID = c.get_uid();
+
+      // remixapi_MeshInfo
+      SEND_STYPE(c, info->sType);
+      SEND_U64(c, info->hash);
+      SEND_U32(c, info->surfaces_count); // send surface count before sending the surfaces
+      
+      for (uint32_t s = 0u; s < info->surfaces_count; s++)
+      {
+        SEND_U64(c, info->surfaces_values[s].vertices_count); // send vertex count before vertices
+        for (uint64_t v = 0u; v < info->surfaces_values[s].vertices_count; v++)
+        {
+          SEND_FLOAT(c, info->surfaces_values[s].vertices_values[v].position[0]);
+          SEND_FLOAT(c, info->surfaces_values[s].vertices_values[v].position[1]);
+          SEND_FLOAT(c, info->surfaces_values[s].vertices_values[v].position[2]);
+
+          SEND_FLOAT(c, info->surfaces_values[s].vertices_values[v].normal[0]);
+          SEND_FLOAT(c, info->surfaces_values[s].vertices_values[v].normal[1]);
+          SEND_FLOAT(c, info->surfaces_values[s].vertices_values[v].normal[2]);
+
+          SEND_FLOAT(c, info->surfaces_values[s].vertices_values[v].texcoord[0]);
+          SEND_FLOAT(c, info->surfaces_values[s].vertices_values[v].texcoord[1]);
+
+          SEND_U32(c, info->surfaces_values[s].vertices_values[v].color);
+        }
+        //SEND_U64(c, NULL); // uint32_t* indices_values # TODO
+        SEND_U64(c, info->surfaces_values[s].indices_count);
+        SEND_U32(c, info->surfaces_values[s].skinning_hasvalue);
+        //SEND_U64(c, NULL); // remixapi_MaterialHandle material
+      }
+    }
+
+    WAIT_FOR_SERVER_RESPONSE("CreateMesh()", 0, currentUID);
+    uint64_t result = DeviceBridge::get_data();
+    DeviceBridge::pop_front();
+    return result;
   }
+
+  void BRIDGEAPI_CALL bridgeapi_DrawMeshInstance(uint64_t handle, const x86::remixapi_Transform* t, x86::remixapi_Bool double_sided) {
+    ClientMessage c(Commands::Api_DrawMeshInstance);
+    SEND_U64(c, handle);
+    SEND_FLOAT(c, t->matrix[0][0]); SEND_FLOAT(c, t->matrix[0][1]); SEND_FLOAT(c, t->matrix[0][2]); SEND_FLOAT(c, t->matrix[0][3]);
+    SEND_FLOAT(c, t->matrix[1][0]); SEND_FLOAT(c, t->matrix[1][1]); SEND_FLOAT(c, t->matrix[1][2]); SEND_FLOAT(c, t->matrix[1][3]);
+    SEND_FLOAT(c, t->matrix[2][0]); SEND_FLOAT(c, t->matrix[2][1]); SEND_FLOAT(c, t->matrix[2][2]); SEND_FLOAT(c, t->matrix[2][3]);
+    SEND_U32(c, double_sided);
+  }
+
+
+
+
 
   uint64_t BRIDGEAPI_CALL bridgeapi_CreateSphereLight(const x86::remixapi_LightInfo* info, const x86::remixapi_LightInfoSphereEXT* sphere_info) {
     UID currentUID = 0;
@@ -221,7 +272,8 @@ namespace {
       auto interf = bridgeapi_Interface {};
       {
         interf.DebugPrint = bridgeapi_DebugPrint;
-        interf.Present = bridgeapi_Present;
+        interf.CreateTriangleMesh = bridgeapi_CreateTriangleMesh;
+        interf.DrawMeshInstance = bridgeapi_DrawMeshInstance;
         interf.CreateSphereLight = bridgeapi_CreateSphereLight;
         interf.CreateRectLight = bridgeapi_CreateRectLight;
         interf.CreateDiskLight = bridgeapi_CreateDiscLight;

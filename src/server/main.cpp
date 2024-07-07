@@ -2684,8 +2684,77 @@ void ProcessDeviceCommandQueue() {
 
 
 
-      case Api_Present:
+      case Api_CreateTriangleMesh:
       {
+        remixapi_MeshInfo i = {};
+        {
+          i.sType = NVPULL_STYPE();
+          // pNext
+          i.hash = NVPULL_U64();
+          i.surfaces_count = NVPULL_U32(); // surface count before surfaces
+        }
+
+        std::vector<remixapi_MeshInfoSurfaceTriangles> t;
+        t.reserve(1024);
+
+        std::vector<remixapi_HardcodedVertex> verts;
+        verts.reserve(1024);
+
+        for (uint32_t s = 0u; s < i.surfaces_count; s++)
+        {
+          const auto vertex_count = NVPULL_U64();
+          for (uint64_t v = 0u; v < vertex_count; v++)
+          {
+            verts.emplace_back(remixapi_HardcodedVertex
+            {
+              NVPULL_FLOAT3D(), // position
+              NVPULL_FLOAT3D(), // normal
+              NVPULL_FLOAT2D(), // texcoord
+              NVPULL_U32()      // color
+            });
+          }
+
+          t.emplace_back(remixapi_MeshInfoSurfaceTriangles 
+          {
+            &verts[0],
+            vertex_count,
+            nullptr, //(uint32_t*) NVPULL_U64(), indices_values
+            NVPULL_U64(), // indices_count
+            NVPULL_U32(), // skinning_hasvalue
+            remixapi_MeshInfoSkinning {},
+            nullptr //(remixapi_MaterialHandle) NVPULL_U64()
+          });
+        }
+
+        // remixapi_MeshInfo
+        i.surfaces_values = &t[0];
+
+        remixapi_MeshHandle temp_handle = nullptr;
+        api::g_remix.CreateMesh(&i, &temp_handle);
+
+        ServerMessage c(Commands::Bridge_Response, currentUID);
+        c.send_data((uint64_t) temp_handle);
+        break;
+      }
+
+      case Api_DrawMeshInstance:
+      {
+        PULL(uint64_t, mesh_handle);
+
+        remixapi_InstanceInfo inst = {};
+        {
+          inst.sType = REMIXAPI_STRUCT_TYPE_INSTANCE_INFO;
+          inst.categoryFlags = 0;
+          inst.mesh = (remixapi_MeshHandle) mesh_handle;
+          inst.transform = { {NVPULL_FLOAT4D(), NVPULL_FLOAT4D(), NVPULL_FLOAT4D()} }; // = { {{1,0,0,0}, {0,1,0,0}, {0,0,1,0}} };
+          inst.doubleSided = NVPULL_U32();
+        }
+
+        if (mesh_handle) {
+          api::g_remix.DrawInstance(&inst);
+        } else {
+          Logger::info("[API-SV] DrawInstance(): invalid mesh_handle");
+        }
         break;
       }
 

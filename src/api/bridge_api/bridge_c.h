@@ -109,6 +109,78 @@ extern "C" {
       float matrix[3][4];
     } remixapi_Transform;
 
+
+    typedef struct remixapi_MaterialHandle_T* remixapi_MaterialHandle;
+    typedef struct remixapi_MeshHandle_T* remixapi_MeshHandle;
+    typedef struct remixapi_LightHandle_T* remixapi_LightHandle;
+
+    typedef const wchar_t* remixapi_Path;
+
+
+    typedef struct remixapi_MaterialInfo {
+      remixapi_StructType sType;
+      //void* pNext;
+      uint64_t            hash;
+      remixapi_Path       albedoTexture;
+      remixapi_Path       normalTexture;
+      remixapi_Path       tangentTexture;
+      remixapi_Path       emissiveTexture;
+      float               emissiveIntensity;
+      remixapi_Float3D    emissiveColorConstant;
+      uint8_t             spriteSheetRow;
+      uint8_t             spriteSheetCol;
+      uint8_t             spriteSheetFps;
+      uint8_t             filterMode;
+      uint8_t             wrapModeU;
+      uint8_t             wrapModeV;
+    } remixapi_MaterialInfo;
+
+
+    typedef struct remixapi_HardcodedVertex {
+      float    position[3];
+      float    normal[3];
+      float    texcoord[2];
+      uint32_t color;
+      uint32_t _pad0;
+      uint32_t _pad1;
+      uint32_t _pad2;
+      uint32_t _pad3;
+      uint32_t _pad4;
+      uint32_t _pad5;
+      uint32_t _pad6;
+    } remixapi_HardcodedVertex;
+
+    /*typedef struct remixapi_MeshInfoSkinning {
+      uint32_t                        bonesPerVertex;
+      // Each tuple of 'bonesPerVertex' float-s defines a vertex.
+      // I.e. the size must be (bonesPerVertex * vertexCount).
+      const float*                    blendWeights_values;
+      uint32_t                        blendWeights_count;
+      // Each tuple of 'bonesPerVertex' uint32_t-s defines a vertex.
+      // I.e. the size must be (bonesPerVertex * vertexCount).
+      const uint32_t*                 blendIndices_values;
+      uint32_t                        blendIndices_count;
+    } remixapi_MeshInfoSkinning;*/
+
+    typedef struct remixapi_MeshInfoSurfaceTriangles {
+      const remixapi_HardcodedVertex* vertices_values;
+      uint64_t                        vertices_count;
+      const uint32_t*                 indices_values;
+      uint64_t                        indices_count;
+      remixapi_Bool                   skinning_hasvalue;
+      //remixapi_MeshInfoSkinning       skinning_value; // # TODO
+      remixapi_MaterialHandle         material;
+    } remixapi_MeshInfoSurfaceTriangles;
+
+    typedef struct remixapi_MeshInfo {
+      remixapi_StructType                      sType;
+      //void* pNext;
+      uint64_t                                 hash;
+      const remixapi_MeshInfoSurfaceTriangles* surfaces_values;
+      uint32_t                                 surfaces_count;
+    } remixapi_MeshInfo;
+
+
     typedef struct remixapi_LightInfoLightShaping {
       // The direction the Light Shaping is pointing in. Must be normalized.
       remixapi_Float3D               direction;
@@ -184,8 +256,6 @@ extern "C" {
       uint64_t                        hash;
       remixapi_Float3D                radiance;
     } remixapi_LightInfo;
-
-    typedef struct remixapi_LightHandle_T* remixapi_LightHandle;
   }
 
   // -----------------------------------------------------------
@@ -193,7 +263,8 @@ extern "C" {
 
 
   typedef void(BRIDGEAPI_PTR* PFN_bridgeapi_DebugPrint)(const char* text);
-  typedef void(BRIDGEAPI_PTR* PFN_bridgeapi_Present)(void);
+  typedef uint64_t(BRIDGEAPI_PTR* PFN_bridgeapi_CreateTriangleMesh)(const x86::remixapi_MeshInfo* info);
+  typedef void(BRIDGEAPI_PTR* PFN_bridgeapi_DrawMeshInstance)(uint64_t handle, const x86::remixapi_Transform* t, x86::remixapi_Bool double_sided);
   typedef uint64_t(BRIDGEAPI_PTR* PFN_bridgeapi_CreateSphereLight)(const x86::remixapi_LightInfo* info, const x86::remixapi_LightInfoSphereEXT* sphere_info);
   typedef uint64_t(BRIDGEAPI_PTR* PFN_bridgeapi_CreateRectLight)(const x86::remixapi_LightInfo* info, const x86::remixapi_LightInfoRectEXT* rect_info);
   typedef uint64_t(BRIDGEAPI_PTR* PFN_bridgeapi_CreateDiskLight)(const x86::remixapi_LightInfo* info, const x86::remixapi_LightInfoDiskEXT* disk_info);
@@ -207,7 +278,8 @@ extern "C" {
   typedef struct bridgeapi_Interface {
     bool initialized;
     PFN_bridgeapi_DebugPrint          DebugPrint;            // const char* text
-    PFN_bridgeapi_Present             Present;               // void
+    PFN_bridgeapi_CreateTriangleMesh  CreateTriangleMesh;    // x86::remixapi_MeshInfo* info
+    PFN_bridgeapi_DrawMeshInstance    DrawMeshInstance;      // uint64_t handle --- x86::remixapi_Transform* t --- x86::remixapi_Bool double_sided
     PFN_bridgeapi_CreateSphereLight   CreateSphereLight;     // x86::remixapi_LightInfo* info --- x86::remixapi_LightInfoSphereEXT* sphere_info
     PFN_bridgeapi_CreateRectLight     CreateRectLight;       // x86::remixapi_LightInfo* info --- x86::remixapi_LightInfoRectEXT* rect_info
     PFN_bridgeapi_CreateDiskLight     CreateDiskLight;       // x86::remixapi_LightInfo* info --- x86::remixapi_LightInfoDiskEXT* disk_info
