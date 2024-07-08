@@ -24,6 +24,9 @@
   SEND_FLOAT(MSG, (V).z); \
   SEND_FLOAT(MSG, (V).w)
 
+#define SEND_INT(MSG, T) \
+  (MSG).send_data((int32_t) (T))
+
 #define SEND_STYPE(MSG, T) \
   (MSG).send_data((uint32_t) (T))
 
@@ -40,6 +43,62 @@ namespace {
     command.send_data(strlen(text), (void*) text);
   }
 
+  uint64_t BRIDGEAPI_CALL bridgeapi_CreateOpaqueMaterial(const x86::remixapi_MaterialInfo* info, const x86::remixapi_MaterialInfoOpaqueEXT* opaque_info) {
+    UID currentUID = 0;
+    {
+      ClientMessage c(Commands::Api_CreateOpaqueMaterial);
+      currentUID = c.get_uid();
+
+      // MaterialInfo
+      SEND_STYPE(c, info->sType);
+      SEND_U64(c, info->hash);
+      // path albedoTexture
+      // path normalTexture
+      // path tangentTexture
+      // path emissiveTexture
+      SEND_FLOAT(c, info->emissiveIntensity);
+      SEND_FLOAT3D(c, info->emissiveColorConstant);
+      c.send_data((uint8_t) info->spriteSheetRow);
+      c.send_data((uint8_t) info->spriteSheetCol);
+      c.send_data((uint8_t) info->spriteSheetFps);
+      c.send_data((uint8_t) info->filterMode);
+      c.send_data((uint8_t) info->wrapModeU);
+      c.send_data((uint8_t) info->wrapModeV);
+
+      // MaterialInfoOpaqueEXT
+      SEND_STYPE(c, opaque_info->sType);
+      // path roughnessTexture
+      // path metallicTexture
+      SEND_FLOAT(c, opaque_info->anisotropy);
+      SEND_FLOAT3D(c, opaque_info->albedoConstant);
+      SEND_FLOAT(c, opaque_info->opacityConstant);
+      SEND_FLOAT(c, opaque_info->roughnessConstant);
+      SEND_FLOAT(c, opaque_info->metallicConstant);
+      SEND_U32(c, opaque_info->thinFilmThickness_hasvalue);
+      SEND_FLOAT(c, opaque_info->thinFilmThickness_value);
+      SEND_U32(c, opaque_info->alphaIsThinFilmThickness);
+      // path heightTexture;
+      SEND_FLOAT(c, opaque_info->heightTextureStrength);
+      // If true, InstanceInfoBlendEXT is used as a source for alpha state
+      SEND_U32(c, opaque_info->useDrawCallAlphaState);
+      SEND_U32(c, opaque_info->blendType_hasvalue);
+      SEND_INT(c, opaque_info->blendType_value);
+      SEND_U32(c, opaque_info->invertedBlend);
+      SEND_INT(c, opaque_info->alphaTestType);
+      c.send_data((uint8_t) opaque_info->alphaReferenceValue);
+    }
+
+    WAIT_FOR_SERVER_RESPONSE("CreateMaterial()", 0, currentUID);
+    uint64_t result = DeviceBridge::get_data();
+    DeviceBridge::pop_front();
+    return result;
+  }
+
+  void BRIDGEAPI_CALL bridgeapi_DestroyMaterial(uint64_t handle) {
+    ClientMessage c(Commands::Api_DestroyMaterial);
+    SEND_U64(c, handle);
+  }
+
   uint64_t BRIDGEAPI_CALL bridgeapi_CreateTriangleMesh(const x86::remixapi_MeshInfo* info) {
     UID currentUID = 0;
     {
@@ -49,7 +108,7 @@ namespace {
       //Logger::info("bridgeapi_CreateTriangleMesh::");
       //Logger::info("|> surface_count = " + std::to_string(info->surfaces_count));
 
-      // remixapi_MeshInfo
+      // MeshInfo
       SEND_STYPE(c, info->sType);
       SEND_U64(c, info->hash);
 
@@ -293,6 +352,8 @@ namespace {
       auto interf = bridgeapi_Interface {};
       {
         interf.DebugPrint = bridgeapi_DebugPrint;
+        interf.CreateOpaqueMaterial = bridgeapi_CreateOpaqueMaterial;
+        interf.DestroyMaterial = bridgeapi_DestroyMaterial;
         interf.CreateTriangleMesh = bridgeapi_CreateTriangleMesh;
         interf.DestroyMesh = bridgeapi_DestroyMesh;
         interf.DrawMeshInstance = bridgeapi_DrawMeshInstance;

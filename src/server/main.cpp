@@ -51,7 +51,7 @@
 #include <assert.h>
 #include <map>
 #include <atomic>
-
+#include <locale>
 #include "remix_api/remix_c.h"
 #include "bridge_api.h"
 
@@ -2680,9 +2680,77 @@ void ProcessDeviceCommandQueue() {
 
 
 
+      case Api_CreateOpaqueMaterial:
+      {
+        remixapi_MaterialInfo info = {};
+        {
+          info.sType = NVPULL_STYPE();
+          info.hash = NVPULL_U64();
 
+          info.albedoTexture = L""; //DeviceBridge::getReaderChannel().data->pull((void**)&info.albedoTexture);
+          info.normalTexture = L""; //DeviceBridge::getReaderChannel().data->pull((void**)&info.normalTexture);
+          info.tangentTexture = L""; //DeviceBridge::getReaderChannel().data->pull((void**)&info.tangentTexture);
+          info.emissiveTexture = L""; //DeviceBridge::getReaderChannel().data->pull((void**)&info.emissiveTexture);
 
+          info.emissiveIntensity = NVPULL_FLOAT();
+          info.emissiveColorConstant = NVPULL_FLOAT3D();
+          info.spriteSheetRow = (uint8_t) DeviceBridge::get_data();
+          info.spriteSheetCol = (uint8_t) DeviceBridge::get_data();
+          info.spriteSheetFps = (uint8_t) DeviceBridge::get_data();
+          info.filterMode = (uint8_t) DeviceBridge::get_data();
+          info.wrapModeU = (uint8_t) DeviceBridge::get_data();
+          info.wrapModeV = (uint8_t) DeviceBridge::get_data();
+        }
 
+        remixapi_MaterialInfoOpaqueEXT opaque_info = {};
+        {
+          opaque_info.sType = NVPULL_STYPE();
+          opaque_info.roughnessTexture = L""; // path roughnessTexture
+          opaque_info.metallicTexture = L""; // path metallicTexture
+          opaque_info.anisotropy = NVPULL_FLOAT();
+          opaque_info.albedoConstant = NVPULL_FLOAT3D();
+          opaque_info.opacityConstant = NVPULL_FLOAT();
+          opaque_info.roughnessConstant = NVPULL_FLOAT();
+          opaque_info.metallicConstant = NVPULL_FLOAT();
+          opaque_info.thinFilmThickness_hasvalue = NVPULL_U32();
+          opaque_info.thinFilmThickness_value = NVPULL_FLOAT();
+          opaque_info.alphaIsThinFilmThickness = NVPULL_U32();
+          opaque_info.heightTexture = L""; // path heightTexture;
+          opaque_info.heightTextureStrength = NVPULL_FLOAT();
+          // If true, InstanceInfoBlendEXT is used as a source for alpha state
+          opaque_info.useDrawCallAlphaState = NVPULL_U32();
+          opaque_info.blendType_hasvalue = NVPULL_U32();
+          opaque_info.blendType_value = NVPULL_I();
+          opaque_info.invertedBlend = NVPULL_U32();
+          opaque_info.alphaTestType = NVPULL_I();
+          opaque_info.alphaReferenceValue = (uint8_t) DeviceBridge::get_data();
+        }
+
+        // assign ext
+        info.pNext = &opaque_info;
+
+        remixapi_MaterialHandle temp_handle = nullptr;
+        api::g_remix.CreateMaterial(&info, &temp_handle);
+
+        ServerMessage c(Commands::Bridge_Response, currentUID);
+        c.send_data((uint64_t) temp_handle);
+        break;
+      }
+
+      case Api_DestroyMaterial:
+      {
+        PULL(uint64_t, material_handle);
+
+        if (material_handle) {
+          /*remixapi_ErrorCode r =*/ api::g_remix.DestroyMaterial((remixapi_MaterialHandle) material_handle);
+          /*if (r != REMIXAPI_ERROR_CODE_SUCCESS) {
+            Logger::info("[API-SV] DestroyLight(): failed = " + std::to_string(r));
+          }*/
+        } else {
+          Logger::info("[API-SV] DestroyMaterial(): invalid light_handle");
+        }
+        break;
+      }
 
       case Api_CreateTriangleMesh:
       {

@@ -38,6 +38,8 @@ namespace Commands {
     Bridge_Response,
     Bridge_DebugMessage,
 
+    Api_CreateOpaqueMaterial,
+    Api_DestroyMaterial,
     Api_CreateTriangleMesh,
     Api_DestroyMesh,
     Api_DrawMeshInstance,
@@ -477,6 +479,8 @@ namespace Commands {
     case Bridge_Response: return "Response";
     case Bridge_DebugMessage: return "DebugMessage";
 
+    case Api_CreateOpaqueMaterial: return "ApiCreateOpaqueMaterial";
+    case Api_DestroyMaterial: return "ApiDestroyMaterial";
     case Api_CreateTriangleMesh: return "ApiCreateTriangleMesh";
     case Api_DestroyMesh: return "ApiDestroyMesh";
     case Api_DrawMeshInstance: return "ApiDrawMeshInstance";
