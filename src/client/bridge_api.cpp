@@ -1,10 +1,30 @@
-// x86 client Bridge API implementation 
-
-#include "bridge_api/bridge_c.h"
+/*
+ * Copyright (c) 2023, NVIDIA CORPORATION. All rights reserved.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
+ */
 
 #include "log/log.h"
 #include "util_bridgecommand.h"
 #include "util_devicecommand.h"
+#include "bridge_api.h"
+
 
 #define SEND_FLOAT(MSG, V) \
   (MSG).send_data((uint32_t) *(uint32_t*)(&(V)))
@@ -35,6 +55,12 @@
 
 #define SEND_U64(MSG, U64) \
   (MSG).send_data((uint64_t) (U64))
+
+
+namespace BridgeApiCL {
+  bool Initialized = false;
+  PFN_bridgeapi_RegisterEndSceneCallback GameCallback = nullptr;
+}
 
 namespace {
   void BRIDGEAPI_CALL bridgeapi_DebugPrint(const char* text) {
@@ -105,8 +131,8 @@ namespace {
       ClientMessage c(Commands::Api_CreateTriangleMesh);
       currentUID = c.get_uid();
 
-      //Logger::info("bridgeapi_CreateTriangleMesh::");
-      //Logger::info("|> surface_count = " + std::to_string(info->surfaces_count));
+      //Logger::debug("[BridgeApi-CL] CreateTriangleMesh ::");
+      //Logger::debug("|> surface_count = " + std::to_string(info->surfaces_count));
 
       // MeshInfo
       SEND_STYPE(c, info->sType);
@@ -117,10 +143,10 @@ namespace {
       for (uint32_t s = 0u; s < info->surfaces_count; s++) 
       {
         const auto& surf = info->surfaces_values[s];
-        //Logger::info("|> surface " + std::to_string(s));
+        //Logger::debug("|> surface " + std::to_string(s));
 
         // send vertices of the current surface
-        //Logger::info("|>> vertex count " + std::to_string(surf.vertices_count));
+        //Logger::debug("|>> vertex count " + std::to_string(surf.vertices_count));
         SEND_U64(c, surf.vertices_count); // send vertex count before vertices
         for (uint64_t v = 0u; v < surf.vertices_count; v++)
         {
@@ -140,7 +166,7 @@ namespace {
         }
 
         // send indices of the current surface
-        //Logger::info("|>> index count " + std::to_string(surf.indices_count));
+        //Logger::debug("|>> index count " + std::to_string(surf.indices_count));
         SEND_U64(c, surf.indices_count); // send index count before indices
         for (uint64_t i = 0u; i < surf.indices_count; i++) {
           SEND_U32(c, surf.indices_values[i]);
@@ -170,10 +196,6 @@ namespace {
     SEND_FLOAT(c, t->matrix[2][0]); SEND_FLOAT(c, t->matrix[2][1]); SEND_FLOAT(c, t->matrix[2][2]); SEND_FLOAT(c, t->matrix[2][3]);
     SEND_U32(c, double_sided);
   }
-
-
-
-
 
   uint64_t BRIDGEAPI_CALL bridgeapi_CreateSphereLight(const x86::remixapi_LightInfo* info, const x86::remixapi_LightInfoSphereEXT* sphere_info) {
     UID currentUID = 0;
@@ -307,6 +329,12 @@ namespace {
       ClientMessage c(Commands::Api_CreateDistantLight);
       currentUID = c.get_uid();
 
+      //Logger::debug("[BridgeApi-CL] CreateDistantLight ::");
+      //Logger::debug("|> info: sType[" +std::to_string(info->sType) + "]");
+      //Logger::debug("|> info: hash[" + std::to_string(info->hash) + "]");
+      //Logger::debug("|> ext: sType[" + std::to_string(dist_info->sType) + "]");
+      //Logger::debug("|> ext: angularDiameterDegrees[" + std::to_string(dist_info->angularDiameterDegrees) + "]");
+
       // LightInfo
       SEND_STYPE(c, info->sType);
       SEND_U64(c, info->hash);
@@ -344,6 +372,10 @@ namespace {
     ClientMessage c(Commands::Api_RegisterDevice);
   }
 
+  BRIDGE_API void bridgeapi_RegisterEndSceneCallback(PFN_bridgeapi_RegisterEndSceneCallback callback) {
+    BridgeApiCL::GameCallback = callback;
+  }
+
   extern "C" {
     BRIDGE_API BRIDGEAPI_ErrorCode __cdecl bridgeapi_InitFuncs(bridgeapi_Interface* out_result) {
       if (!out_result) {
@@ -366,8 +398,12 @@ namespace {
         interf.DrawLightInstance = bridgeapi_DrawLightInstance;
         interf.SetConfigVariable = bridgeapi_SetConfigVariable;
         interf.RegisterDevice = bridgeapi_RegisterDevice;
+        interf.RegisterEndSceneCallback = bridgeapi_RegisterEndSceneCallback;
       }
+
       *out_result = interf;
+      BridgeApiCL::Initialized = true;
+
       return BRIDGEAPI_ERROR_CODE_SUCCESS;
     }
   }

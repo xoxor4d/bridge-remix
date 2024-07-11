@@ -54,6 +54,7 @@
 #include <locale>
 #include "remix_api/remix_c.h"
 #include "bridge_api.h"
+#include "../client/client_options.h"
 
 using namespace Commands;
 using namespace bridge_util;
@@ -2679,7 +2680,6 @@ void ProcessDeviceCommandQueue() {
       // ######################################################################################################
 
 
-
       case Api_CreateOpaqueMaterial:
       {
         remixapi_MaterialInfo info = {};
@@ -2730,7 +2730,8 @@ void ProcessDeviceCommandQueue() {
         info.pNext = &opaque_info;
 
         remixapi_MaterialHandle temp_handle = nullptr;
-        api::g_remix.CreateMaterial(&info, &temp_handle);
+        /*auto s =*/ BridgeApiSV::g_remix.CreateMaterial(&info, &temp_handle);
+        //Logger::debug("[BridgeApi-SV] RemixApi::CreateMaterial() returned status [" + std::to_string(s) + "]");
 
         ServerMessage c(Commands::Bridge_Response, currentUID);
         c.send_data((uint64_t) temp_handle);
@@ -2742,12 +2743,10 @@ void ProcessDeviceCommandQueue() {
         PULL(uint64_t, material_handle);
 
         if (material_handle) {
-          /*remixapi_ErrorCode r =*/ api::g_remix.DestroyMaterial((remixapi_MaterialHandle) material_handle);
-          /*if (r != REMIXAPI_ERROR_CODE_SUCCESS) {
-            Logger::info("[API-SV] DestroyLight(): failed = " + std::to_string(r));
-          }*/
+          /*auto s =*/ BridgeApiSV::g_remix.DestroyMaterial((remixapi_MaterialHandle) material_handle);
+          //Logger::debug("[BridgeApi-SV] RemixApi::DestroyMaterial() returned status [" + std::to_string(s) + "]");
         } else {
-          Logger::info("[API-SV] DestroyMaterial(): invalid light_handle");
+          Logger::debug("[BridgeApi-SV] DestroyMaterial(): Invalid material_handle");
         }
         break;
       }
@@ -2808,7 +2807,8 @@ void ProcessDeviceCommandQueue() {
         info.surfaces_values = surfs.data();
 
         remixapi_MeshHandle temp_handle = nullptr;
-        api::g_remix.CreateMesh(&info, &temp_handle);
+        /*auto s =*/ BridgeApiSV::g_remix.CreateMesh(&info, &temp_handle);
+        //Logger::debug("[BridgeApi-SV] RemixApi::CreateMesh() returned status [" + std::to_string(s) + "]");
 
         ServerMessage c(Commands::Bridge_Response, currentUID);
         c.send_data((uint64_t) temp_handle);
@@ -2820,12 +2820,10 @@ void ProcessDeviceCommandQueue() {
         PULL(uint64_t, mesh_handle);
 
         if (mesh_handle) {
-          /*remixapi_ErrorCode r =*/ api::g_remix.DestroyMesh((remixapi_MeshHandle) mesh_handle);
-          /*if (r != REMIXAPI_ERROR_CODE_SUCCESS) {
-            Logger::info("[API-SV] DestroyLight(): failed = " + std::to_string(r));
-          }*/
+          /*auto s =*/ BridgeApiSV::g_remix.DestroyMesh((remixapi_MeshHandle) mesh_handle);
+          //Logger::debug("[BridgeApi-SV] RemixApi::DestroyMesh() returned status [" + std::to_string(s) + "]");
         } else {
-          Logger::info("[API-SV] DestroyMesh(): invalid light_handle");
+          Logger::debug("[BridgeApi-SV] DestroyMesh(): Invalid mesh_handle");
         }
         break;
       }
@@ -2844,9 +2842,10 @@ void ProcessDeviceCommandQueue() {
         }
 
         if (mesh_handle) {
-          api::g_remix.DrawInstance(&inst);
+          /*auto s =*/ BridgeApiSV::g_remix.DrawInstance(&inst);
+          //Logger::debug("[BridgeApi-SV] RemixApi::DrawInstance(Mesh) returned status [" + std::to_string(s) + "]");
         } else {
-          Logger::info("[API-SV] DrawInstance(): invalid mesh_handle");
+          Logger::debug("[BridgeApi-SV] DrawInstance(): Invalid mesh_handle");
         }
         break;
       }
@@ -2881,21 +2880,11 @@ void ProcessDeviceCommandQueue() {
         l.pNext = &s;
 
         remixapi_LightHandle temp_handle = nullptr;
-        /*remixapi_ErrorCode r =*/ api::g_remix.CreateLight(&l, &temp_handle);
-        //Logger::info("[API-SV] CreateLight(): " + (!r ? "success" : "error: " + std::to_string(r)));
+        /*auto s =*/ BridgeApiSV::g_remix.CreateLight(&l, &temp_handle);
+        //Logger::debug("[BridgeApi-SV] RemixApi::CreateLight(SphereLight) returned status [" + std::to_string(s) + "]");
 
         ServerMessage c(Commands::Bridge_Response, currentUID);
         c.send_data((uint64_t) temp_handle);
-
-        //Logger::info("Api_CreateLight: light created with handle: " + std::to_string((uint64_t) temp_handle) + " with hash: " + std::to_string(hash));
-        //Logger::info("|> l.sType: " + std::to_string(l.sType));
-        //Logger::info("|> l.pNext: " + std::to_string((uint64_t) l.pNext));
-        //Logger::info("|> l.hash: " + std::to_string(l.hash));
-        //Logger::info("|> l.radiance: " + std::to_string(l.radiance.x) + " " + std::to_string(l.radiance.y) + " " + std::to_string(l.radiance.z));
-        //Logger::info("|> s offset: " + std::to_string((uint64_t) &s));
-        //Logger::info("|> s.sType: " + std::to_string(s.sType));
-        //Logger::info("|> s.position: " + std::to_string(s.position.x) + " " + std::to_string(s.position.y) + " " + std::to_string(s.position.z));
-        //Logger::info("|> s.radius: " + std::to_string(s.radius));
         break;
       }
 
@@ -2933,7 +2922,8 @@ void ProcessDeviceCommandQueue() {
         l.pNext = &r;
 
         remixapi_LightHandle temp_handle = nullptr;
-        api::g_remix.CreateLight(&l, &temp_handle);
+        /*auto s =*/ BridgeApiSV::g_remix.CreateLight(&l, &temp_handle);
+        //Logger::debug("[BridgeApi-SV] RemixApi::CreateLight(RectLight) returned status [" + std::to_string(s) + "]");
 
         ServerMessage c(Commands::Bridge_Response, currentUID);
         c.send_data((uint64_t) temp_handle);
@@ -2974,7 +2964,8 @@ void ProcessDeviceCommandQueue() {
         l.pNext = &d;
 
         remixapi_LightHandle temp_handle = nullptr;
-        api::g_remix.CreateLight(&l, &temp_handle);
+        /*auto s =*/ BridgeApiSV::g_remix.CreateLight(&l, &temp_handle);
+        //Logger::debug("[BridgeApi-SV] RemixApi::CreateLight(DiskLight) returned status [" + std::to_string(s) + "]");
 
         ServerMessage c(Commands::Bridge_Response, currentUID);
         c.send_data((uint64_t) temp_handle);
@@ -3005,7 +2996,8 @@ void ProcessDeviceCommandQueue() {
         l.pNext = &cy;
 
         remixapi_LightHandle temp_handle = nullptr;
-        api::g_remix.CreateLight(&l, &temp_handle);
+        /*auto s =*/ BridgeApiSV::g_remix.CreateLight(&l, &temp_handle);
+        //Logger::debug("[BridgeApi-SV] RemixApi::CreateLight(CylinderLight) returned status [" + std::to_string(s) + "]");
 
         ServerMessage c(Commands::Bridge_Response, currentUID);
         c.send_data((uint64_t) temp_handle);
@@ -3034,7 +3026,8 @@ void ProcessDeviceCommandQueue() {
         l.pNext = &d;
 
         remixapi_LightHandle temp_handle = nullptr;
-        api::g_remix.CreateLight(&l, &temp_handle);
+        /*auto s =*/ BridgeApiSV::g_remix.CreateLight(&l, &temp_handle);
+        //Logger::debug("[BridgeApi-SV] RemixApi::CreateLight(DistantLight) returned status [" + std::to_string(s) + "]");
 
         ServerMessage c(Commands::Bridge_Response, currentUID);
         c.send_data((uint64_t) temp_handle);
@@ -3046,12 +3039,10 @@ void ProcessDeviceCommandQueue() {
         PULL(uint64_t, light_handle);
 
         if (light_handle) {
-          /*remixapi_ErrorCode r =*/ api::g_remix.DestroyLight((remixapi_LightHandle) light_handle);
-          /*if (r != REMIXAPI_ERROR_CODE_SUCCESS) {
-            Logger::info("[API-SV] DestroyLight(): failed = " + std::to_string(r));
-          }*/
+          /*remixapi_ErrorCode s =*/ BridgeApiSV::g_remix.DestroyLight((remixapi_LightHandle) light_handle);
+          //Logger::debug("[BridgeApi-SV] RemixApi::DestroyLight() returned status [" + std::to_string(s) + "]");
         } else {
-          Logger::info("[API-SV] DestroyLight(): invalid light_handle");
+          Logger::debug("[BridgeApi-SV] DestroyLight(): invalid light_handle");
         }
         break;
       }
@@ -3060,9 +3051,10 @@ void ProcessDeviceCommandQueue() {
         PULL(uint64_t, light_handle);
 
         if (light_handle) {
-          api::g_remix.DrawLightInstance((remixapi_LightHandle) light_handle);
+          /*remixapi_ErrorCode s =*/ BridgeApiSV::g_remix.DrawLightInstance((remixapi_LightHandle) light_handle);
+          //Logger::debug("[BridgeApi-SV] RemixApi::DrawLightInstance() returned status [" + std::to_string(s) + "]");
         } else {
-          Logger::info("[API-SV] DrawLightInstance(): invalid light_handle");
+          Logger::debug("[BridgeApi-SV] DrawLightInstance(): invalid light_handle");
         }
         break;
       }
@@ -3077,23 +3069,23 @@ void ProcessDeviceCommandQueue() {
         const int value_length = DeviceBridge::getReaderChannel().data->peek();
         const int value_size = DeviceBridge::getReaderChannel().data->pull(&value_text);
 
-        //Logger::info("[API-SV] Config Var: \"" + std::string((char*) var_text) + "\" with len/size: " + std::to_string(var_length) + " / " + std::to_string(var_size));
-        //Logger::info("|> Config Value: \"" + std::string((char*) value_text) + "\" with len/size: " + std::to_string(value_length) + " / " + std::to_string(value_size));
+        /*auto s =*/ BridgeApiSV::g_remix.SetConfigVariable((const char*) var_text, (const char*) value_text);
+        //Logger::debug("[BridgeApi-SV] RemixApi::SetConfigVariable() returned status [" + std::to_string(s) + "]");
 
-        auto r = api::g_remix.SetConfigVariable((const char*) var_text, (const char*) value_text);
-        //Logger::info("[API-SV] SetConfigVariable(): " + (!r ? "success" : "error: " + std::to_string(r)));
+        //Logger::debug("[BridgeApi-SV] Config Var: \"" + std::string((char*) var_text) + "\" with len/size: " + std::to_string(var_length) + " / " + std::to_string(var_size));
+        //Logger::debug("|> Config Value: \"" + std::string((char*) value_text) + "\" with len/size: " + std::to_string(value_length) + " / " + std::to_string(value_size));
         break;
       }
 
       case Api_RegisterDevice:
       {
-        if (api::is_initialized()) {
+        if (BridgeApiSV::IsInitialized()) {
           //std::lock_guard<std::mutex> device_lock(api::g_device_mutex);
-          if (const auto dev = api::get_device(); dev) {
-            remixapi_ErrorCode r = api::g_remix.dxvk_RegisterD3D9Device(dev);
-            Logger::info("[API-SV] dxvk_RegisterD3D9Device(): " + (!r ? "success" : "error: " + std::to_string(r)));
+          if (const auto dev = BridgeApiSV::GetDevice(); dev) {
+            remixapi_ErrorCode r = BridgeApiSV::g_remix.dxvk_RegisterD3D9Device(dev);
+            Logger::info("[BridgeApi-SV] RemixApi::dxvk_RegisterD3D9Device(): " + (!r ? "success" : "error: " + std::to_string(r)));
           } else {
-            Logger::warn("[API-SV] failed to get d3d9 device!");
+            Logger::warn("[BridgeApi-SV] Failed to get d3d9 device!");
           }
         }
         break;
@@ -3243,22 +3235,16 @@ bool InitializeD3D() {
     } else {
       Logger::info("D3D9 interface object creation succeeded!");
     }
-
-
-    // #TODO
-    // if (ServerOptions::getUseBridgeApi())
-
-    remixapi_ErrorCode status = remixapi_lib_loadRemixDllAndInitialize(L"d3d9.dll", &api::g_remix, &api::g_remix_dll);
-    if (status != REMIXAPI_ERROR_CODE_SUCCESS) {
-      Logger::err(format_string("[API-SV] RemixApi initialization failed: %d\n", status));
-    } else {
-      api::g_remix_initialized = true;
-      Logger::info("[API-SV] Initialized RemixApi.");
+    // Initialize remixApi
+    if (ClientOptions::getEnableBridgeApi()) {
+      remixapi_ErrorCode status = remixapi_lib_loadRemixDllAndInitialize(L"d3d9.dll", &BridgeApiSV::g_remix, &BridgeApiSV::g_remix_dll);
+      if (status != REMIXAPI_ERROR_CODE_SUCCESS) {
+        Logger::err(format_string("[BridgeApi-SV] RemixApi initialization failed: %d\n", status));
+      } else {
+        BridgeApiSV::g_remix_initialized = true;
+        Logger::info("[BridgeApi-SV] Initialized RemixApi.");
+      }
     }
-
-
-
-
   } else {
     Logger::err(format_string("d3d9.dll loading failed: %ld\n", GetLastError()));
     return false;

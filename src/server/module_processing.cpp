@@ -83,15 +83,15 @@ namespace {
   }
 }
 
-namespace api {
-  IDirect3DDevice9Ex* get_device() {
+namespace BridgeApiSV {
+  IDirect3DDevice9Ex* GetDevice() {
     std::lock_guard<std::mutex> device_lock(g_device_mutex);
     if (g_device) {
-      Logger::info("[API-SV] get_device(): success");
+      Logger::info("[BridgeApi-SV] GetDevice(): success");
       return g_device;
     }
 
-    Logger::info("[API-SV] get_device(): failed");
+    Logger::info("[BridgeApi-SV] GetDevice(): failed");
     return nullptr;
   }
 }
@@ -381,7 +381,7 @@ void processModuleCommandQueue(std::atomic<bool>* const pbSignalEnd) {
       } else {
         Logger::info("Server side D3D9 DeviceEx created successfully!");
         gpD3DDevices[pHandle] = pD3DDevice;
-        api::g_device = pD3DDevice;
+        BridgeApiSV::g_device = pD3DDevice;
       }
 
       // Send response back to the client
@@ -413,7 +413,7 @@ void processModuleCommandQueue(std::atomic<bool>* const pbSignalEnd) {
       } else {
         Logger::info("Server side D3D9 Device created successfully!");
         gpD3DDevices[pHandle] = (IDirect3DDevice9Ex*) pD3DDevice;
-        api::g_device = (IDirect3DDevice9Ex*) pD3DDevice;
+        BridgeApiSV::g_device = (IDirect3DDevice9Ex*) pD3DDevice;
       }
 
       // Send response back to the client

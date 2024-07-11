@@ -1,3 +1,25 @@
+/*
+ * Copyright (c) 2023, NVIDIA CORPORATION. All rights reserved.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
+ */
+
 // Bridge API header for both the x86 bridge client and the x86 game
 
 #ifndef BRIDGE_C_H_
@@ -9,7 +31,11 @@
 #define BRIDGEAPI_CALL __stdcall
 #define BRIDGEAPI_PTR  BRIDGEAPI_CALL
 
-#define BRIDGE_API  __declspec(dllexport)
+#ifdef BRIDGE_API_IMPORT
+    #define BRIDGE_API  __declspec(dllimport)
+#else
+    #define BRIDGE_API  __declspec(dllexport)
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -300,6 +326,7 @@ extern "C" {
   typedef void(BRIDGEAPI_PTR* PFN_bridgeapi_DrawLightInstance)(uint64_t handle);
   typedef void(BRIDGEAPI_PTR* PFN_bridgeapi_SetConfigVariable)(const char* var, const char* value);
   typedef void(BRIDGEAPI_PTR* PFN_bridgeapi_RegisterDevice)(void);
+  typedef void(__cdecl* PFN_bridgeapi_RegisterEndSceneCallback)(void);
 
   typedef struct bridgeapi_Interface {
     bool initialized;
@@ -318,6 +345,7 @@ extern "C" {
     PFN_bridgeapi_DrawLightInstance    DrawLightInstance;     // uint64_t handle
     PFN_bridgeapi_SetConfigVariable    SetConfigVariable;     // const char* var --- const char* value
     PFN_bridgeapi_RegisterDevice       RegisterDevice;        // void
+    void                             (*RegisterEndSceneCallback)(PFN_bridgeapi_RegisterEndSceneCallback callback);
   } bridgeapi_Interface;
 
   BRIDGE_API BRIDGEAPI_ErrorCode __cdecl bridgeapi_InitFuncs(bridgeapi_Interface* out_result);
@@ -330,26 +358,26 @@ extern "C" {
 
     PFN_bridgeapi_InitFuncs pfn_Initialize = nullptr;
   	HMODULE hModule = GetModuleHandleA("d3d9.dll");
-	if (hModule) {
-	  PROC func = GetProcAddress(hModule, "bridgeapi_InitFuncs");
-	  if (func) {
-	  	pfn_Initialize = (PFN_bridgeapi_InitFuncs) func;
-	  }
-	  else {
-	  	return BRIDGEAPI_ERROR_CODE_GET_PROC_ADDRESS_FAILURE;
-	  }
-	  
-	  bridgeapi_Interface bridgeInterface = { 0 };
-	  bridgeapi_ErrorCode status = pfn_Initialize(&bridgeInterface);
-	  if (status != BRIDGEAPI_ERROR_CODE_SUCCESS) {
-	  	return status;
-	  }
-
-	  bridgeInterface.initialized = true;
-	  *out_bridgeInterface = bridgeInterface;
-	  return status;
-	}
-
+    if (hModule) {
+      PROC func = GetProcAddress(hModule, "bridgeapi_InitFuncs");
+      if (func) {
+      	pfn_Initialize = (PFN_bridgeapi_InitFuncs) func;
+      }
+      else {
+      	return BRIDGEAPI_ERROR_CODE_GET_PROC_ADDRESS_FAILURE;
+      }
+    
+      bridgeapi_Interface bridgeInterface = { 0 };
+      bridgeapi_ErrorCode status = pfn_Initialize(&bridgeInterface);
+      if (status != BRIDGEAPI_ERROR_CODE_SUCCESS) {
+      	return status;
+      }
+    
+      bridgeInterface.initialized = true;
+      *out_bridgeInterface = bridgeInterface;
+    
+      return status;
+    }
   	return BRIDGEAPI_ERROR_CODE_GET_MODULE_HANDLE_FAILURE;
   }
 

@@ -55,6 +55,7 @@ d3d9_src = files([
 
 d3d9_header = files([
   'base.h',
+  'bridge_api.h',
   'client_options.h',
   'd3d9_base_texture.h',
   'd3d9_commonshader.h',

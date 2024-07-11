@@ -30,6 +30,7 @@ powershell -command "& { . .\build_bridge.ps1; Build -Platform x86 -BuildFlavour
 COPY "X:\git_repos_cod\bridge-remix\_output\.trex\NvRemixBridge.exe" "G:\COD4Modtools\.trex"
 COPY "X:\git_repos_cod\bridge-remix\_output\.trex\NvRemixBridge.pdb" "G:\COD4Modtools\.trex"
 COPY "X:\git_repos_cod\bridge-remix\_output\d3d9.dll" "G:\COD4Modtools"
+COPY "X:\git_repos_cod\bridge-remix\_output\d3d9.pdb" "G:\COD4Modtools"
 pause
 exit %ERRORLEVEL%
 

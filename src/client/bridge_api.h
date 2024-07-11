@@ -21,20 +21,9 @@
  */
 #pragma once
 
-#include "remix_api/remix_c.h"
-#include <mutex>
+#include "bridge_api/bridge_c.h"
 
-namespace BridgeApiSV {
-  static inline remixapi_Interface g_remix = {};
-  static inline bool g_remix_initialized = false;
-  static inline HMODULE g_remix_dll = nullptr;
-
-  static bool IsInitialized() {
-    return g_remix_initialized;
-  }
-
-  static inline IDirect3DDevice9Ex* g_device;
-  static inline std::mutex g_device_mutex;
-  IDirect3DDevice9Ex* GetDevice();
+namespace BridgeApiCL {
+  extern bool Initialized;
+  extern PFN_bridgeapi_RegisterEndSceneCallback GameCallback;
 }
-
