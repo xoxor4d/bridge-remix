@@ -218,7 +218,7 @@ extern "C" {
       uint64_t                        indices_count;
       remixapi_Bool                   skinning_hasvalue;
       //remixapi_MeshInfoSkinning       skinning_value; // # TODO
-      remixapi_MaterialHandle         material;
+      uint64_t                        material; // CHANGED - was remixapi_MaterialHandle
     } remixapi_MeshInfoSurfaceTriangles;
 
     typedef struct remixapi_MeshInfo {

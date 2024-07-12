@@ -54,8 +54,11 @@
   (MSG).send_data((uint32_t) (U32))
 
 #define SEND_U64(MSG, U64) \
-  (MSG).send_data((uint64_t) (U64))
+  (MSG).send_data(sizeof(uint64_t), &(U64))
 
+#define PULL_DATA(SIZE, NAME) \
+            uint32_t NAME##_len = DeviceBridge::get_data((void**)&(NAME)); \
+            assert(NAME##_len == 0 || (SIZE) == NAME##_len)
 
 namespace BridgeApiCL {
   bool Initialized = false;
@@ -115,9 +118,10 @@ namespace {
     }
 
     WAIT_FOR_SERVER_RESPONSE("CreateMaterial()", 0, currentUID);
-    uint64_t result = DeviceBridge::get_data();
+    uint64_t* result = nullptr;
+    PULL_DATA(sizeof(uint64_t), result);
     DeviceBridge::pop_front();
-    return result;
+    return *result;
   }
 
   void BRIDGEAPI_CALL bridgeapi_DestroyMaterial(uint64_t handle) {
@@ -173,14 +177,21 @@ namespace {
         }
 
         SEND_U32(c, surf.skinning_hasvalue);
-        SEND_U64(c, (uint64_t) surf.material); // remixapi_MaterialHandle material
+
+        // using remixapi_MaterialHandle is unpractical and kinda unsafe because its only 4 bytes <here> (ptr)
+        // so user would have to send an actual pointer instead of the uint64_t hash val and we would have to
+        // make sure to send the proper 8 bytes of the uint64_t
+        //Logger::debug("[BridgeApi-CL] RemixApi::CreateTriangleMesh() sending material u32 [" + std::to_string((uint32_t) surf.material) + "]");
+        //Logger::debug("[BridgeApi-CL] RemixApi::CreateTriangleMesh() sending material u64 [" + std::to_string((uint64_t) surf.material) + "]");
+        SEND_U64(c, surf.material);
       }
     }
 
     WAIT_FOR_SERVER_RESPONSE("CreateMesh()", 0, currentUID);
-    uint64_t result = DeviceBridge::get_data();
+    uint64_t* result = nullptr;
+    PULL_DATA(sizeof(uint64_t), result);
     DeviceBridge::pop_front();
-    return result;
+    return *result;
   }
 
   void BRIDGEAPI_CALL bridgeapi_DestroyMesh(uint64_t handle) {
@@ -223,9 +234,10 @@ namespace {
     }
 
     WAIT_FOR_SERVER_RESPONSE("CreateLight()", 0, currentUID);
-    uint64_t result = DeviceBridge::get_data();
+    uint64_t* result = nullptr;
+    PULL_DATA(sizeof(uint64_t), result);
     DeviceBridge::pop_front();
-    return result;
+    return *result;
   }
 
   uint64_t BRIDGEAPI_CALL bridgeapi_CreateRectLight(const x86::remixapi_LightInfo* info, const x86::remixapi_LightInfoRectEXT* rect_info) {
@@ -258,9 +270,10 @@ namespace {
     }
 
     WAIT_FOR_SERVER_RESPONSE("CreateLight()", 0, currentUID);
-    uint64_t result = DeviceBridge::get_data();
+    uint64_t* result = nullptr;
+    PULL_DATA(sizeof(uint64_t), result);
     DeviceBridge::pop_front();
-    return result;
+    return *result;
   }
 
   uint64_t BRIDGEAPI_CALL bridgeapi_CreateDiscLight(const x86::remixapi_LightInfo* info, const x86::remixapi_LightInfoDiskEXT* disk_info) {
@@ -293,9 +306,10 @@ namespace {
     }
 
     WAIT_FOR_SERVER_RESPONSE("CreateLight()", 0, currentUID);
-    uint64_t result = DeviceBridge::get_data();
+    uint64_t* result = nullptr;
+    PULL_DATA(sizeof(uint64_t), result);
     DeviceBridge::pop_front();
-    return result;
+    return *result;
   }
 
   uint64_t BRIDGEAPI_CALL bridgeapi_CreateCylinderLight(const x86::remixapi_LightInfo* info, const x86::remixapi_LightInfoCylinderEXT* cylinder_info) {
@@ -318,9 +332,10 @@ namespace {
     }
 
     WAIT_FOR_SERVER_RESPONSE("CreateLight()", 0, currentUID);
-    uint64_t result = DeviceBridge::get_data();
+    uint64_t* result = nullptr;
+    PULL_DATA(sizeof(uint64_t), result);
     DeviceBridge::pop_front();
-    return result;
+    return *result;
   }
 
   uint64_t BRIDGEAPI_CALL bridgeapi_CreateDistantLight(const x86::remixapi_LightInfo* info, const x86::remixapi_LightInfoDistantEXT* dist_info) {
@@ -347,9 +362,10 @@ namespace {
     }
 
     WAIT_FOR_SERVER_RESPONSE("CreateLight()", 0, currentUID);
-    uint64_t result = DeviceBridge::get_data();
+    uint64_t* result = nullptr;
+    PULL_DATA(sizeof(uint64_t), result);
     DeviceBridge::pop_front();
-    return result;
+    return *result;
   }
 
   void BRIDGEAPI_CALL bridgeapi_DestroyLight(uint64_t handle) {
