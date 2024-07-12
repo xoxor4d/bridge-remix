@@ -61,18 +61,10 @@ extern "C" {
     // WinAPI's GetFullPathName has failed
     //BRIDGEAPI_ERROR_CODE_GET_FULL_PATH_NAME_FAILURE = 10,
     BRIDGEAPI_ERROR_CODE_NOT_INITIALIZED = 11,
-    // Error codes that are encoded as HRESULT, i.e. returned from D3D9 functions.
-    // Look MAKE_D3DHRESULT, but with _FACD3D=0x896, instead of D3D9's 0x876
-    //BRIDGEAPI_ERROR_CODE_HRESULT_NO_REQUIRED_GPU_FEATURES = 0x88960001,
-    //BRIDGEAPI_ERROR_CODE_HRESULT_DRIVER_VERSION_BELOW_MINIMUM = 0x88960002,
-    //BRIDGEAPI_ERROR_CODE_HRESULT_DXVK_INSTANCE_EXTENSION_FAIL = 0x88960003,
-    //BRIDGEAPI_ERROR_CODE_HRESULT_VK_CREATE_INSTANCE_FAIL = 0x88960004,
-    //BRIDGEAPI_ERROR_CODE_HRESULT_VK_CREATE_DEVICE_FAIL = 0x88960005,
-    //BRIDGEAPI_ERROR_CODE_HRESULT_GRAPHICS_QUEUE_FAMILY_MISSING = 0x88960006,
   } BRIDGEAPI_ErrorCode;
 
-  // -----------------------------------------------------------
-  // <- remix api types directly grabbed from the remix_c header
+  // ------------------------------------------
+  // <- remix api types from the remix_c header
 
   typedef enum remixapi_StructType {
     REMIXAPI_STRUCT_TYPE_NONE = 0,
@@ -135,10 +127,9 @@ extern "C" {
       float matrix[3][4];
     } remixapi_Transform;
 
-
-    typedef struct remixapi_MaterialHandle_T* remixapi_MaterialHandle;
-    typedef struct remixapi_MeshHandle_T* remixapi_MeshHandle;
-    typedef struct remixapi_LightHandle_T* remixapi_LightHandle;
+    //typedef struct remixapi_MaterialHandle_T* remixapi_MaterialHandle;
+    //typedef struct remixapi_MeshHandle_T* remixapi_MeshHandle;
+    //typedef struct remixapi_LightHandle_T* remixapi_LightHandle;
 
     typedef const wchar_t* remixapi_Path;
 
@@ -191,6 +182,8 @@ extern "C" {
       remixapi_Bool       useDiffuseLayer;
     } remixapi_MaterialInfoTranslucentEXT;
 
+    // # TODO remixapi_MaterialInfoPortalEXT
+
     typedef struct remixapi_MaterialInfo {
       remixapi_StructType sType;
       //void* pNext;
@@ -224,17 +217,7 @@ extern "C" {
       uint32_t _pad6;
     } remixapi_HardcodedVertex;
 
-    /*typedef struct remixapi_MeshInfoSkinning {
-      uint32_t                        bonesPerVertex;
-      // Each tuple of 'bonesPerVertex' float-s defines a vertex.
-      // I.e. the size must be (bonesPerVertex * vertexCount).
-      const float*                    blendWeights_values;
-      uint32_t                        blendWeights_count;
-      // Each tuple of 'bonesPerVertex' uint32_t-s defines a vertex.
-      // I.e. the size must be (bonesPerVertex * vertexCount).
-      const uint32_t*                 blendIndices_values;
-      uint32_t                        blendIndices_count;
-    } remixapi_MeshInfoSkinning;*/
+    // # TODO remixapi_MeshInfoSkinning
 
     typedef struct remixapi_MeshInfoSurfaceTriangles {
       const remixapi_HardcodedVertex* vertices_values;
@@ -332,9 +315,8 @@ extern "C" {
     } remixapi_LightInfo;
   }
 
-  // -----------------------------------------------------------
+  // --------------------------------------------
   // remix api types end ->
-
 
   typedef void(BRIDGEAPI_PTR* PFN_bridgeapi_DebugPrint)(const char* text);
   typedef uint64_t(BRIDGEAPI_PTR* PFN_bridgeapi_CreateOpaqueMaterial)(const x86::remixapi_MaterialInfo* info, const x86::remixapi_MaterialInfoOpaqueEXT* ext, const x86::remixapi_MaterialInfoOpaqueSubsurfaceEXT* ext_ss);

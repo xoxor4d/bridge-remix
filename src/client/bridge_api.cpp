@@ -111,8 +111,7 @@ namespace {
       SEND_U32(c, ext->alphaIsThinFilmThickness);
       SEND_PATH(c, ext->heightTexture);
       SEND_FLOAT(c, ext->heightTextureStrength);
-      // If true, InstanceInfoBlendEXT is used as a source for alpha state
-      SEND_U32(c, ext->useDrawCallAlphaState);
+      SEND_U32(c, ext->useDrawCallAlphaState); // If true, InstanceInfoBlendEXT is used as a source for alpha state
       SEND_U32(c, ext->blendType_hasvalue);
       SEND_INT(c, ext->blendType_value);
       SEND_U32(c, ext->invertedBlend);
@@ -216,14 +215,11 @@ namespace {
           SEND_FLOAT(c, vert.position[0]);
           SEND_FLOAT(c, vert.position[1]);
           SEND_FLOAT(c, vert.position[2]);
-
           SEND_FLOAT(c, vert.normal[0]);
           SEND_FLOAT(c, vert.normal[1]);
           SEND_FLOAT(c, vert.normal[2]);
-
           SEND_FLOAT(c, vert.texcoord[0]);
           SEND_FLOAT(c, vert.texcoord[1]);
-
           SEND_U32(c, vert.color);
         }
 
@@ -235,10 +231,10 @@ namespace {
         }
 
         SEND_U32(c, surf.skinning_hasvalue);
+        // # TODO skinning
 
         // using remixapi_MaterialHandle is unpractical and kinda unsafe because its only 4 bytes <here> (ptr)
-        // so user would have to send an actual pointer instead of the uint64_t hash val and we would have to
-        // make sure to send the proper 8 bytes of the uint64_t
+        // so user would have to send an actual pointer instead of the uint64_t hash val 
         //Logger::debug("[BridgeApi-CL] RemixApi::CreateTriangleMesh() sending material u32 [" + std::to_string((uint32_t) surf.material) + "]");
         //Logger::debug("[BridgeApi-CL] RemixApi::CreateTriangleMesh() sending material u64 [" + std::to_string((uint64_t) surf.material) + "]");
         SEND_U64(c, surf.material);
@@ -401,12 +397,6 @@ namespace {
     {
       ClientMessage c(Commands::Api_CreateDistantLight);
       currentUID = c.get_uid();
-
-      //Logger::debug("[BridgeApi-CL] CreateDistantLight ::");
-      //Logger::debug("|> info: sType[" +std::to_string(info->sType) + "]");
-      //Logger::debug("|> info: hash[" + std::to_string(info->hash) + "]");
-      //Logger::debug("|> ext: sType[" + std::to_string(ext->sType) + "]");
-      //Logger::debug("|> ext: angularDiameterDegrees[" + std::to_string(ext->angularDiameterDegrees) + "]");
 
       // LightInfo
       SEND_STYPE(c, info->sType);
