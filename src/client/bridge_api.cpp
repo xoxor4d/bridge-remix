@@ -56,6 +56,9 @@
 #define SEND_U64(MSG, U64) \
   (MSG).send_data(sizeof(uint64_t), &(U64))
 
+#define SEND_PATH(MSG, PATH) \
+  (MSG).send_data((uint32_t)wcslen((PATH) ? (PATH) : L"") * sizeof(wchar_t), (PATH) ? (PATH) : L"")
+
 #define PULL_DATA(SIZE, NAME) \
             uint32_t NAME##_len = DeviceBridge::get_data((void**)&(NAME)); \
             assert(NAME##_len == 0 || (SIZE) == NAME##_len)
@@ -81,10 +84,10 @@ namespace {
       // MaterialInfo
       SEND_STYPE(c, info->sType);
       SEND_U64(c, info->hash);
-      // path albedoTexture
-      // path normalTexture
-      // path tangentTexture
-      // path emissiveTexture
+      SEND_PATH(c, info->albedoTexture);
+      SEND_PATH(c, info->normalTexture);
+      SEND_PATH(c, info->tangentTexture);
+      SEND_PATH(c, info->emissiveTexture);
       SEND_FLOAT(c, info->emissiveIntensity);
       SEND_FLOAT3D(c, info->emissiveColorConstant);
       c.send_data((uint8_t) info->spriteSheetRow);
@@ -96,8 +99,8 @@ namespace {
 
       // MaterialInfoOpaqueEXT
       SEND_STYPE(c, opaque_info->sType);
-      // path roughnessTexture
-      // path metallicTexture
+      SEND_PATH(c, opaque_info->roughnessTexture);
+      SEND_PATH(c, opaque_info->metallicTexture);
       SEND_FLOAT(c, opaque_info->anisotropy);
       SEND_FLOAT3D(c, opaque_info->albedoConstant);
       SEND_FLOAT(c, opaque_info->opacityConstant);
@@ -106,7 +109,7 @@ namespace {
       SEND_U32(c, opaque_info->thinFilmThickness_hasvalue);
       SEND_FLOAT(c, opaque_info->thinFilmThickness_value);
       SEND_U32(c, opaque_info->alphaIsThinFilmThickness);
-      // path heightTexture;
+      SEND_PATH(c, opaque_info->heightTexture);
       SEND_FLOAT(c, opaque_info->heightTextureStrength);
       // If true, InstanceInfoBlendEXT is used as a source for alpha state
       SEND_U32(c, opaque_info->useDrawCallAlphaState);

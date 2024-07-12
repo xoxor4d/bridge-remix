@@ -111,7 +111,7 @@ using namespace bridge_util;
             assert(len == 0 || sizeof(uint64_t) == len); \
             (DEST) = *result; \
             }
-
+#define NVPULL_DATA(DEST) DeviceBridge::getReaderChannel().data->pull((void**) &(DEST));
 #define NVPULL_FLOAT() *(float*)(&DeviceBridge::get_data())
 #define NVPULL_FLOAT2D() { NVPULL_FLOAT(), NVPULL_FLOAT() }
 #define NVPULL_FLOAT3D() { NVPULL_FLOAT(), NVPULL_FLOAT(), NVPULL_FLOAT() }
@@ -2693,10 +2693,10 @@ void ProcessDeviceCommandQueue() {
           info.sType = NVPULL_STYPE();
           NVPULL_U64(info.hash);
 
-          info.albedoTexture = L""; //DeviceBridge::getReaderChannel().data->pull((void**)&info.albedoTexture);
-          info.normalTexture = L""; //DeviceBridge::getReaderChannel().data->pull((void**)&info.normalTexture);
-          info.tangentTexture = L""; //DeviceBridge::getReaderChannel().data->pull((void**)&info.tangentTexture);
-          info.emissiveTexture = L""; //DeviceBridge::getReaderChannel().data->pull((void**)&info.emissiveTexture);
+          NVPULL_DATA(info.albedoTexture); //info.albedoTexture = L"";
+          NVPULL_DATA(info.normalTexture); //info.normalTexture = L"";
+          NVPULL_DATA(info.tangentTexture); //info.tangentTexture = L"";
+          NVPULL_DATA(info.emissiveTexture); //info.emissiveTexture = L"";
 
           info.emissiveIntensity = NVPULL_FLOAT();
           info.emissiveColorConstant = NVPULL_FLOAT3D();
@@ -2711,8 +2711,8 @@ void ProcessDeviceCommandQueue() {
         remixapi_MaterialInfoOpaqueEXT opaque_info = {};
         {
           opaque_info.sType = NVPULL_STYPE();
-          opaque_info.roughnessTexture = L""; // path roughnessTexture
-          opaque_info.metallicTexture = L""; // path metallicTexture
+          NVPULL_DATA(opaque_info.roughnessTexture); //opaque_info.roughnessTexture = L"";
+          NVPULL_DATA(opaque_info.metallicTexture); //opaque_info.metallicTexture = L"";
           opaque_info.anisotropy = NVPULL_FLOAT();
           opaque_info.albedoConstant = NVPULL_FLOAT3D();
           opaque_info.opacityConstant = NVPULL_FLOAT();
@@ -2721,7 +2721,7 @@ void ProcessDeviceCommandQueue() {
           opaque_info.thinFilmThickness_hasvalue = NVPULL_U32();
           opaque_info.thinFilmThickness_value = NVPULL_FLOAT();
           opaque_info.alphaIsThinFilmThickness = NVPULL_U32();
-          opaque_info.heightTexture = L""; // path heightTexture;
+          NVPULL_DATA(opaque_info.heightTexture); //opaque_info.heightTexture = L"";
           opaque_info.heightTextureStrength = NVPULL_FLOAT();
           // If true, InstanceInfoBlendEXT is used as a source for alpha state
           opaque_info.useDrawCallAlphaState = NVPULL_U32();
