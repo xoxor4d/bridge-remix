@@ -2708,32 +2708,32 @@ void ProcessDeviceCommandQueue() {
           info.wrapModeV = (uint8_t) DeviceBridge::get_data();
         }
 
-        remixapi_MaterialInfoOpaqueEXT opaque_info = {};
+        remixapi_MaterialInfoOpaqueEXT ext = {};
         {
-          opaque_info.sType = NVPULL_STYPE();
-          NVPULL_DATA(opaque_info.roughnessTexture); //opaque_info.roughnessTexture = L"";
-          NVPULL_DATA(opaque_info.metallicTexture); //opaque_info.metallicTexture = L"";
-          opaque_info.anisotropy = NVPULL_FLOAT();
-          opaque_info.albedoConstant = NVPULL_FLOAT3D();
-          opaque_info.opacityConstant = NVPULL_FLOAT();
-          opaque_info.roughnessConstant = NVPULL_FLOAT();
-          opaque_info.metallicConstant = NVPULL_FLOAT();
-          opaque_info.thinFilmThickness_hasvalue = NVPULL_U32();
-          opaque_info.thinFilmThickness_value = NVPULL_FLOAT();
-          opaque_info.alphaIsThinFilmThickness = NVPULL_U32();
-          NVPULL_DATA(opaque_info.heightTexture); //opaque_info.heightTexture = L"";
-          opaque_info.heightTextureStrength = NVPULL_FLOAT();
+          ext.sType = NVPULL_STYPE();
+          NVPULL_DATA(ext.roughnessTexture); //ext.roughnessTexture = L"";
+          NVPULL_DATA(ext.metallicTexture); //ext.metallicTexture = L"";
+          ext.anisotropy = NVPULL_FLOAT();
+          ext.albedoConstant = NVPULL_FLOAT3D();
+          ext.opacityConstant = NVPULL_FLOAT();
+          ext.roughnessConstant = NVPULL_FLOAT();
+          ext.metallicConstant = NVPULL_FLOAT();
+          ext.thinFilmThickness_hasvalue = NVPULL_U32();
+          ext.thinFilmThickness_value = NVPULL_FLOAT();
+          ext.alphaIsThinFilmThickness = NVPULL_U32();
+          NVPULL_DATA(ext.heightTexture); //ext.heightTexture = L"";
+          ext.heightTextureStrength = NVPULL_FLOAT();
           // If true, InstanceInfoBlendEXT is used as a source for alpha state
-          opaque_info.useDrawCallAlphaState = NVPULL_U32();
-          opaque_info.blendType_hasvalue = NVPULL_U32();
-          opaque_info.blendType_value = NVPULL_I();
-          opaque_info.invertedBlend = NVPULL_U32();
-          opaque_info.alphaTestType = NVPULL_I();
-          opaque_info.alphaReferenceValue = (uint8_t) DeviceBridge::get_data();
+          ext.useDrawCallAlphaState = NVPULL_U32();
+          ext.blendType_hasvalue = NVPULL_U32();
+          ext.blendType_value = NVPULL_I();
+          ext.invertedBlend = NVPULL_U32();
+          ext.alphaTestType = NVPULL_I();
+          ext.alphaReferenceValue = (uint8_t) DeviceBridge::get_data();
         }
 
         // assign ext
-        info.pNext = &opaque_info;
+        info.pNext = &ext;
 
         remixapi_MaterialHandle temp_handle = nullptr;
         /*auto s =*/ BridgeApiSV::g_remix.CreateMaterial(&info, &temp_handle);
@@ -2918,24 +2918,24 @@ void ProcessDeviceCommandQueue() {
           l.radiance = NVPULL_FLOAT3D();
         }
 
-        remixapi_LightInfoSphereEXT s = {};
+        remixapi_LightInfoSphereEXT ext = {};
         {
-          s.sType = NVPULL_STYPE();
-          s.pNext = nullptr;
-          s.position = NVPULL_FLOAT3D();
-          s.radius = NVPULL_FLOAT();
-          s.shaping_hasvalue = NVPULL_U32();
+          ext.sType = NVPULL_STYPE();
+          ext.pNext = nullptr;
+          ext.position = NVPULL_FLOAT3D();
+          ext.radius = NVPULL_FLOAT();
+          ext.shaping_hasvalue = NVPULL_U32();
 
-          if (s.shaping_hasvalue) {
-            s.shaping_value.direction = NVPULL_FLOAT3D();
-            s.shaping_value.coneAngleDegrees = NVPULL_FLOAT();
-            s.shaping_value.coneSoftness = NVPULL_FLOAT();
-            s.shaping_value.focusExponent = NVPULL_FLOAT();
+          if (ext.shaping_hasvalue) {
+            ext.shaping_value.direction = NVPULL_FLOAT3D();
+            ext.shaping_value.coneAngleDegrees = NVPULL_FLOAT();
+            ext.shaping_value.coneSoftness = NVPULL_FLOAT();
+            ext.shaping_value.focusExponent = NVPULL_FLOAT();
           }
         }
 
         // remixapi_LightInfo
-        l.pNext = &s;
+        l.pNext = &ext;
 
         remixapi_LightHandle temp_handle = nullptr;
         /*auto s =*/ BridgeApiSV::g_remix.CreateLight(&l, &temp_handle);
@@ -2956,28 +2956,28 @@ void ProcessDeviceCommandQueue() {
           l.radiance = NVPULL_FLOAT3D();
         }
 
-        remixapi_LightInfoRectEXT r = {};
+        remixapi_LightInfoRectEXT ext = {};
         {
-          r.sType = NVPULL_STYPE();
-          r.pNext = nullptr;
-          r.position = NVPULL_FLOAT3D();
-          r.xAxis = NVPULL_FLOAT3D();
-          r.xSize = NVPULL_FLOAT();
-          r.yAxis = NVPULL_FLOAT3D();
-          r.ySize = NVPULL_FLOAT();
-          r.direction = NVPULL_FLOAT3D();
-          r.shaping_hasvalue = NVPULL_U32();
+          ext.sType = NVPULL_STYPE();
+          ext.pNext = nullptr;
+          ext.position = NVPULL_FLOAT3D();
+          ext.xAxis = NVPULL_FLOAT3D();
+          ext.xSize = NVPULL_FLOAT();
+          ext.yAxis = NVPULL_FLOAT3D();
+          ext.ySize = NVPULL_FLOAT();
+          ext.direction = NVPULL_FLOAT3D();
+          ext.shaping_hasvalue = NVPULL_U32();
 
-          if (r.shaping_hasvalue) {
-            r.shaping_value.direction = NVPULL_FLOAT3D();
-            r.shaping_value.coneAngleDegrees = NVPULL_FLOAT();
-            r.shaping_value.coneSoftness = NVPULL_FLOAT();
-            r.shaping_value.focusExponent = NVPULL_FLOAT();
+          if (ext.shaping_hasvalue) {
+            ext.shaping_value.direction = NVPULL_FLOAT3D();
+            ext.shaping_value.coneAngleDegrees = NVPULL_FLOAT();
+            ext.shaping_value.coneSoftness = NVPULL_FLOAT();
+            ext.shaping_value.focusExponent = NVPULL_FLOAT();
           }
         }
 
         // remixapi_LightInfo
-        l.pNext = &r;
+        l.pNext = &ext;
 
         remixapi_LightHandle temp_handle = nullptr;
         /*auto s =*/ BridgeApiSV::g_remix.CreateLight(&l, &temp_handle);
@@ -2998,28 +2998,28 @@ void ProcessDeviceCommandQueue() {
           l.radiance = NVPULL_FLOAT3D();
         }
 
-        remixapi_LightInfoDiskEXT d = {};
+        remixapi_LightInfoDiskEXT ext = {};
         {
-          d.sType = NVPULL_STYPE();
-          d.pNext = nullptr;
-          d.position = NVPULL_FLOAT3D();
-          d.xAxis = NVPULL_FLOAT3D();
-          d.xRadius = NVPULL_FLOAT();
-          d.yAxis = NVPULL_FLOAT3D();
-          d.yRadius = NVPULL_FLOAT();
-          d.direction = NVPULL_FLOAT3D();
-          d.shaping_hasvalue = NVPULL_U32();
+          ext.sType = NVPULL_STYPE();
+          ext.pNext = nullptr;
+          ext.position = NVPULL_FLOAT3D();
+          ext.xAxis = NVPULL_FLOAT3D();
+          ext.xRadius = NVPULL_FLOAT();
+          ext.yAxis = NVPULL_FLOAT3D();
+          ext.yRadius = NVPULL_FLOAT();
+          ext.direction = NVPULL_FLOAT3D();
+          ext.shaping_hasvalue = NVPULL_U32();
 
-          if (d.shaping_hasvalue) {
-            d.shaping_value.direction = NVPULL_FLOAT3D();
-            d.shaping_value.coneAngleDegrees = NVPULL_FLOAT();
-            d.shaping_value.coneSoftness = NVPULL_FLOAT();
-            d.shaping_value.focusExponent = NVPULL_FLOAT();
+          if (ext.shaping_hasvalue) {
+            ext.shaping_value.direction = NVPULL_FLOAT3D();
+            ext.shaping_value.coneAngleDegrees = NVPULL_FLOAT();
+            ext.shaping_value.coneSoftness = NVPULL_FLOAT();
+            ext.shaping_value.focusExponent = NVPULL_FLOAT();
           }
         }
 
         // remixapi_LightInfo
-        l.pNext = &d;
+        l.pNext = &ext;
 
         remixapi_LightHandle temp_handle = nullptr;
         /*auto s =*/ BridgeApiSV::g_remix.CreateLight(&l, &temp_handle);
@@ -3040,18 +3040,18 @@ void ProcessDeviceCommandQueue() {
           l.radiance = NVPULL_FLOAT3D();
         }
 
-        remixapi_LightInfoCylinderEXT cy = {};
+        remixapi_LightInfoCylinderEXT ext = {};
         {
-          cy.sType = NVPULL_STYPE();
-          cy.pNext = nullptr;
-          cy.position = NVPULL_FLOAT3D();
-          cy.radius = NVPULL_FLOAT();
-          cy.axis = NVPULL_FLOAT3D();
-          cy.axisLength = NVPULL_FLOAT();
+          ext.sType = NVPULL_STYPE();
+          ext.pNext = nullptr;
+          ext.position = NVPULL_FLOAT3D();
+          ext.radius = NVPULL_FLOAT();
+          ext.axis = NVPULL_FLOAT3D();
+          ext.axisLength = NVPULL_FLOAT();
         }
 
         // remixapi_LightInfo
-        l.pNext = &cy;
+        l.pNext = &ext;
 
         remixapi_LightHandle temp_handle = nullptr;
         /*auto s =*/ BridgeApiSV::g_remix.CreateLight(&l, &temp_handle);
@@ -3072,16 +3072,16 @@ void ProcessDeviceCommandQueue() {
           l.radiance = NVPULL_FLOAT3D();
         }
 
-        remixapi_LightInfoDistantEXT d = {};
+        remixapi_LightInfoDistantEXT ext = {};
         {
-          d.sType = NVPULL_STYPE();
-          d.pNext = nullptr;
-          d.direction = NVPULL_FLOAT3D();
-          d.angularDiameterDegrees = NVPULL_FLOAT();
+          ext.sType = NVPULL_STYPE();
+          ext.pNext = nullptr;
+          ext.direction = NVPULL_FLOAT3D();
+          ext.angularDiameterDegrees = NVPULL_FLOAT();
         }
 
         // remixapi_LightInfo
-        l.pNext = &d;
+        l.pNext = &ext;
 
         remixapi_LightHandle temp_handle = nullptr;
         /*auto s =*/ BridgeApiSV::g_remix.CreateLight(&l, &temp_handle);

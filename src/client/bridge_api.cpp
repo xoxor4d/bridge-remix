@@ -75,7 +75,7 @@ namespace {
     command.send_data(strlen(text), (void*) text);
   }
 
-  uint64_t BRIDGEAPI_CALL bridgeapi_CreateOpaqueMaterial(const x86::remixapi_MaterialInfo* info, const x86::remixapi_MaterialInfoOpaqueEXT* opaque_info) {
+  uint64_t BRIDGEAPI_CALL bridgeapi_CreateOpaqueMaterial(const x86::remixapi_MaterialInfo* info, const x86::remixapi_MaterialInfoOpaqueEXT* ext) {
     UID currentUID = 0;
     {
       ClientMessage c(Commands::Api_CreateOpaqueMaterial);
@@ -98,26 +98,26 @@ namespace {
       c.send_data((uint8_t) info->wrapModeV);
 
       // MaterialInfoOpaqueEXT
-      SEND_STYPE(c, opaque_info->sType);
-      SEND_PATH(c, opaque_info->roughnessTexture);
-      SEND_PATH(c, opaque_info->metallicTexture);
-      SEND_FLOAT(c, opaque_info->anisotropy);
-      SEND_FLOAT3D(c, opaque_info->albedoConstant);
-      SEND_FLOAT(c, opaque_info->opacityConstant);
-      SEND_FLOAT(c, opaque_info->roughnessConstant);
-      SEND_FLOAT(c, opaque_info->metallicConstant);
-      SEND_U32(c, opaque_info->thinFilmThickness_hasvalue);
-      SEND_FLOAT(c, opaque_info->thinFilmThickness_value);
-      SEND_U32(c, opaque_info->alphaIsThinFilmThickness);
-      SEND_PATH(c, opaque_info->heightTexture);
-      SEND_FLOAT(c, opaque_info->heightTextureStrength);
+      SEND_STYPE(c, ext->sType);
+      SEND_PATH(c, ext->roughnessTexture);
+      SEND_PATH(c, ext->metallicTexture);
+      SEND_FLOAT(c, ext->anisotropy);
+      SEND_FLOAT3D(c, ext->albedoConstant);
+      SEND_FLOAT(c, ext->opacityConstant);
+      SEND_FLOAT(c, ext->roughnessConstant);
+      SEND_FLOAT(c, ext->metallicConstant);
+      SEND_U32(c, ext->thinFilmThickness_hasvalue);
+      SEND_FLOAT(c, ext->thinFilmThickness_value);
+      SEND_U32(c, ext->alphaIsThinFilmThickness);
+      SEND_PATH(c, ext->heightTexture);
+      SEND_FLOAT(c, ext->heightTextureStrength);
       // If true, InstanceInfoBlendEXT is used as a source for alpha state
-      SEND_U32(c, opaque_info->useDrawCallAlphaState);
-      SEND_U32(c, opaque_info->blendType_hasvalue);
-      SEND_INT(c, opaque_info->blendType_value);
-      SEND_U32(c, opaque_info->invertedBlend);
-      SEND_INT(c, opaque_info->alphaTestType);
-      c.send_data((uint8_t) opaque_info->alphaReferenceValue);
+      SEND_U32(c, ext->useDrawCallAlphaState);
+      SEND_U32(c, ext->blendType_hasvalue);
+      SEND_INT(c, ext->blendType_value);
+      SEND_U32(c, ext->invertedBlend);
+      SEND_INT(c, ext->alphaTestType);
+      c.send_data((uint8_t) ext->alphaReferenceValue);
     }
 
     WAIT_FOR_SERVER_RESPONSE("CreateMaterial()", 0, currentUID);
@@ -251,7 +251,7 @@ namespace {
     SEND_U32(c, double_sided);
   }
 
-  uint64_t BRIDGEAPI_CALL bridgeapi_CreateSphereLight(const x86::remixapi_LightInfo* info, const x86::remixapi_LightInfoSphereEXT* sphere_info) {
+  uint64_t BRIDGEAPI_CALL bridgeapi_CreateSphereLight(const x86::remixapi_LightInfo* info, const x86::remixapi_LightInfoSphereEXT* ext) {
     UID currentUID = 0;
     {
       ClientMessage c(Commands::Api_CreateSphereLight);
@@ -263,16 +263,16 @@ namespace {
       SEND_FLOAT3D(c, info->radiance);
 
       // LightInfoSphereEXT
-      SEND_STYPE(c, sphere_info->sType);
-      SEND_FLOAT3D(c, sphere_info->position);
-      SEND_FLOAT(c, sphere_info->radius);
-      SEND_U32(c, sphere_info->shaping_hasvalue);
+      SEND_STYPE(c, ext->sType);
+      SEND_FLOAT3D(c, ext->position);
+      SEND_FLOAT(c, ext->radius);
+      SEND_U32(c, ext->shaping_hasvalue);
 
-      if (sphere_info->shaping_hasvalue) {
-        SEND_FLOAT3D(c, sphere_info->shaping_value.direction);
-        SEND_FLOAT(c, sphere_info->shaping_value.coneAngleDegrees);
-        SEND_FLOAT(c, sphere_info->shaping_value.coneSoftness);
-        SEND_FLOAT(c, sphere_info->shaping_value.focusExponent);
+      if (ext->shaping_hasvalue) {
+        SEND_FLOAT3D(c, ext->shaping_value.direction);
+        SEND_FLOAT(c, ext->shaping_value.coneAngleDegrees);
+        SEND_FLOAT(c, ext->shaping_value.coneSoftness);
+        SEND_FLOAT(c, ext->shaping_value.focusExponent);
       }
     }
 
@@ -283,7 +283,7 @@ namespace {
     return *result;
   }
 
-  uint64_t BRIDGEAPI_CALL bridgeapi_CreateRectLight(const x86::remixapi_LightInfo* info, const x86::remixapi_LightInfoRectEXT* rect_info) {
+  uint64_t BRIDGEAPI_CALL bridgeapi_CreateRectLight(const x86::remixapi_LightInfo* info, const x86::remixapi_LightInfoRectEXT* ext) {
     UID currentUID = 0;
     {
       ClientMessage c(Commands::Api_CreateRectLight);
@@ -295,20 +295,20 @@ namespace {
       SEND_FLOAT3D(c, info->radiance);
 
       // LightInfoRectEXT
-      SEND_STYPE(c, rect_info->sType);
-      SEND_FLOAT3D(c, rect_info->position);
-      SEND_FLOAT3D(c, rect_info->xAxis);
-      SEND_FLOAT(c, rect_info->xSize);
-      SEND_FLOAT3D(c, rect_info->yAxis);
-      SEND_FLOAT(c, rect_info->ySize);
-      SEND_FLOAT3D(c, rect_info->direction);
-      SEND_U32(c, rect_info->shaping_hasvalue);
+      SEND_STYPE(c, ext->sType);
+      SEND_FLOAT3D(c, ext->position);
+      SEND_FLOAT3D(c, ext->xAxis);
+      SEND_FLOAT(c, ext->xSize);
+      SEND_FLOAT3D(c, ext->yAxis);
+      SEND_FLOAT(c, ext->ySize);
+      SEND_FLOAT3D(c, ext->direction);
+      SEND_U32(c, ext->shaping_hasvalue);
 
-      if (rect_info->shaping_hasvalue) {
-        SEND_FLOAT3D(c, rect_info->shaping_value.direction);
-        SEND_FLOAT(c, rect_info->shaping_value.coneAngleDegrees);
-        SEND_FLOAT(c, rect_info->shaping_value.coneSoftness);
-        SEND_FLOAT(c, rect_info->shaping_value.focusExponent);
+      if (ext->shaping_hasvalue) {
+        SEND_FLOAT3D(c, ext->shaping_value.direction);
+        SEND_FLOAT(c, ext->shaping_value.coneAngleDegrees);
+        SEND_FLOAT(c, ext->shaping_value.coneSoftness);
+        SEND_FLOAT(c, ext->shaping_value.focusExponent);
       }
     }
 
@@ -319,7 +319,7 @@ namespace {
     return *result;
   }
 
-  uint64_t BRIDGEAPI_CALL bridgeapi_CreateDiscLight(const x86::remixapi_LightInfo* info, const x86::remixapi_LightInfoDiskEXT* disk_info) {
+  uint64_t BRIDGEAPI_CALL bridgeapi_CreateDiscLight(const x86::remixapi_LightInfo* info, const x86::remixapi_LightInfoDiskEXT* ext) {
     UID currentUID = 0;
     {
       ClientMessage c(Commands::Api_CreateDiskLight);
@@ -331,20 +331,20 @@ namespace {
       SEND_FLOAT3D(c, info->radiance);
 
       // LightInfoDiskEXT
-      SEND_STYPE(c, disk_info->sType);
-      SEND_FLOAT3D(c, disk_info->position);
-      SEND_FLOAT3D(c, disk_info->xAxis);
-      SEND_FLOAT(c, disk_info->xRadius);
-      SEND_FLOAT3D(c, disk_info->yAxis);
-      SEND_FLOAT(c, disk_info->yRadius);
-      SEND_FLOAT3D(c, disk_info->direction);
-      SEND_U32(c, disk_info->shaping_hasvalue);
+      SEND_STYPE(c, ext->sType);
+      SEND_FLOAT3D(c, ext->position);
+      SEND_FLOAT3D(c, ext->xAxis);
+      SEND_FLOAT(c, ext->xRadius);
+      SEND_FLOAT3D(c, ext->yAxis);
+      SEND_FLOAT(c, ext->yRadius);
+      SEND_FLOAT3D(c, ext->direction);
+      SEND_U32(c, ext->shaping_hasvalue);
 
-      if (disk_info->shaping_hasvalue) {
-        SEND_FLOAT3D(c, disk_info->shaping_value.direction);
-        SEND_FLOAT(c, disk_info->shaping_value.coneAngleDegrees);
-        SEND_FLOAT(c, disk_info->shaping_value.coneSoftness);
-        SEND_FLOAT(c, disk_info->shaping_value.focusExponent);
+      if (ext->shaping_hasvalue) {
+        SEND_FLOAT3D(c, ext->shaping_value.direction);
+        SEND_FLOAT(c, ext->shaping_value.coneAngleDegrees);
+        SEND_FLOAT(c, ext->shaping_value.coneSoftness);
+        SEND_FLOAT(c, ext->shaping_value.focusExponent);
       }
     }
 
@@ -355,7 +355,7 @@ namespace {
     return *result;
   }
 
-  uint64_t BRIDGEAPI_CALL bridgeapi_CreateCylinderLight(const x86::remixapi_LightInfo* info, const x86::remixapi_LightInfoCylinderEXT* cylinder_info) {
+  uint64_t BRIDGEAPI_CALL bridgeapi_CreateCylinderLight(const x86::remixapi_LightInfo* info, const x86::remixapi_LightInfoCylinderEXT* ext) {
     UID currentUID = 0;
     {
       ClientMessage c(Commands::Api_CreateCylinderLight);
@@ -367,11 +367,11 @@ namespace {
       SEND_FLOAT3D(c, info->radiance);
 
       // LightInfoCylinderEXT
-      SEND_STYPE(c, cylinder_info->sType);
-      SEND_FLOAT3D(c, cylinder_info->position);
-      SEND_FLOAT(c, cylinder_info->radius);
-      SEND_FLOAT3D(c, cylinder_info->axis);
-      SEND_FLOAT(c, cylinder_info->axisLength);
+      SEND_STYPE(c, ext->sType);
+      SEND_FLOAT3D(c, ext->position);
+      SEND_FLOAT(c, ext->radius);
+      SEND_FLOAT3D(c, ext->axis);
+      SEND_FLOAT(c, ext->axisLength);
     }
 
     WAIT_FOR_SERVER_RESPONSE("CreateLight()", 0, currentUID);
@@ -381,7 +381,7 @@ namespace {
     return *result;
   }
 
-  uint64_t BRIDGEAPI_CALL bridgeapi_CreateDistantLight(const x86::remixapi_LightInfo* info, const x86::remixapi_LightInfoDistantEXT* dist_info) {
+  uint64_t BRIDGEAPI_CALL bridgeapi_CreateDistantLight(const x86::remixapi_LightInfo* info, const x86::remixapi_LightInfoDistantEXT* ext) {
     UID currentUID = 0;
     {
       ClientMessage c(Commands::Api_CreateDistantLight);
@@ -390,8 +390,8 @@ namespace {
       //Logger::debug("[BridgeApi-CL] CreateDistantLight ::");
       //Logger::debug("|> info: sType[" +std::to_string(info->sType) + "]");
       //Logger::debug("|> info: hash[" + std::to_string(info->hash) + "]");
-      //Logger::debug("|> ext: sType[" + std::to_string(dist_info->sType) + "]");
-      //Logger::debug("|> ext: angularDiameterDegrees[" + std::to_string(dist_info->angularDiameterDegrees) + "]");
+      //Logger::debug("|> ext: sType[" + std::to_string(ext->sType) + "]");
+      //Logger::debug("|> ext: angularDiameterDegrees[" + std::to_string(ext->angularDiameterDegrees) + "]");
 
       // LightInfo
       SEND_STYPE(c, info->sType);
@@ -399,9 +399,9 @@ namespace {
       SEND_FLOAT3D(c, info->radiance);
 
       // LightInfoDistantEXT
-      SEND_STYPE(c, dist_info->sType);
-      SEND_FLOAT3D(c, dist_info->direction);
-      SEND_FLOAT(c, dist_info->angularDiameterDegrees);
+      SEND_STYPE(c, ext->sType);
+      SEND_FLOAT3D(c, ext->direction);
+      SEND_FLOAT(c, ext->angularDiameterDegrees);
     }
 
     WAIT_FOR_SERVER_RESPONSE("CreateLight()", 0, currentUID);

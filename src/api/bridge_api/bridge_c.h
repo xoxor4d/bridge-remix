@@ -326,17 +326,17 @@ extern "C" {
 
 
   typedef void(BRIDGEAPI_PTR* PFN_bridgeapi_DebugPrint)(const char* text);
-  typedef uint64_t(BRIDGEAPI_PTR* PFN_bridgeapi_CreateOpaqueMaterial)(const x86::remixapi_MaterialInfo* info, const x86::remixapi_MaterialInfoOpaqueEXT* opaque_info);
+  typedef uint64_t(BRIDGEAPI_PTR* PFN_bridgeapi_CreateOpaqueMaterial)(const x86::remixapi_MaterialInfo* info, const x86::remixapi_MaterialInfoOpaqueEXT* ext);
   typedef uint64_t(BRIDGEAPI_PTR* PFN_bridgeapi_CreateTranslucentMaterial)(const x86::remixapi_MaterialInfo* info, const x86::remixapi_MaterialInfoTranslucentEXT* ext);
   typedef void(BRIDGEAPI_PTR* PFN_bridgeapi_DestroyMaterial)(uint64_t handle);
   typedef uint64_t(BRIDGEAPI_PTR* PFN_bridgeapi_CreateTriangleMesh)(const x86::remixapi_MeshInfo* info);
   typedef void(BRIDGEAPI_PTR* PFN_bridgeapi_DestroyMesh)(uint64_t handle);
   typedef void(BRIDGEAPI_PTR* PFN_bridgeapi_DrawMeshInstance)(uint64_t handle, const x86::remixapi_Transform* t, x86::remixapi_Bool double_sided);
-  typedef uint64_t(BRIDGEAPI_PTR* PFN_bridgeapi_CreateSphereLight)(const x86::remixapi_LightInfo* info, const x86::remixapi_LightInfoSphereEXT* sphere_info);
-  typedef uint64_t(BRIDGEAPI_PTR* PFN_bridgeapi_CreateRectLight)(const x86::remixapi_LightInfo* info, const x86::remixapi_LightInfoRectEXT* rect_info);
-  typedef uint64_t(BRIDGEAPI_PTR* PFN_bridgeapi_CreateDiskLight)(const x86::remixapi_LightInfo* info, const x86::remixapi_LightInfoDiskEXT* disk_info);
-  typedef uint64_t(BRIDGEAPI_PTR* PFN_bridgeapi_CreateCylinderLight)(const x86::remixapi_LightInfo* info, const x86::remixapi_LightInfoCylinderEXT* cylinder_info);
-  typedef uint64_t(BRIDGEAPI_PTR* PFN_bridgeapi_CreateDistantLight)(const x86::remixapi_LightInfo* info, const x86::remixapi_LightInfoDistantEXT* dist_info);
+  typedef uint64_t(BRIDGEAPI_PTR* PFN_bridgeapi_CreateSphereLight)(const x86::remixapi_LightInfo* info, const x86::remixapi_LightInfoSphereEXT* ext);
+  typedef uint64_t(BRIDGEAPI_PTR* PFN_bridgeapi_CreateRectLight)(const x86::remixapi_LightInfo* info, const x86::remixapi_LightInfoRectEXT* ext);
+  typedef uint64_t(BRIDGEAPI_PTR* PFN_bridgeapi_CreateDiskLight)(const x86::remixapi_LightInfo* info, const x86::remixapi_LightInfoDiskEXT* ext);
+  typedef uint64_t(BRIDGEAPI_PTR* PFN_bridgeapi_CreateCylinderLight)(const x86::remixapi_LightInfo* info, const x86::remixapi_LightInfoCylinderEXT* ext);
+  typedef uint64_t(BRIDGEAPI_PTR* PFN_bridgeapi_CreateDistantLight)(const x86::remixapi_LightInfo* info, const x86::remixapi_LightInfoDistantEXT* ext);
   typedef void(BRIDGEAPI_PTR* PFN_bridgeapi_DestroyLight)(uint64_t handle);
   typedef void(BRIDGEAPI_PTR* PFN_bridgeapi_DrawLightInstance)(uint64_t handle);
   typedef void(BRIDGEAPI_PTR* PFN_bridgeapi_SetConfigVariable)(const char* var, const char* value);
@@ -346,17 +346,17 @@ extern "C" {
   typedef struct bridgeapi_Interface {
     bool initialized;
     PFN_bridgeapi_DebugPrint                DebugPrint;                // const char* text
-    PFN_bridgeapi_CreateOpaqueMaterial      CreateOpaqueMaterial;      // x86::remixapi_MaterialInfo* info
-    PFN_bridgeapi_CreateTranslucentMaterial CreateTranslucentMaterial; // x86::remixapi_MaterialInfo* info --- x86::remixapi_MaterialInfoTranslucentEXT* ext
+    PFN_bridgeapi_CreateOpaqueMaterial      CreateOpaqueMaterial;      // x86::remixapi_MaterialInfo*
+    PFN_bridgeapi_CreateTranslucentMaterial CreateTranslucentMaterial; // x86::remixapi_MaterialInfo* --- x86::remixapi_MaterialInfoTranslucentEXT*
     PFN_bridgeapi_DestroyMaterial           DestroyMaterial;           // uint64_t handle
-    PFN_bridgeapi_CreateTriangleMesh        CreateTriangleMesh;        // x86::remixapi_MeshInfo* info
+    PFN_bridgeapi_CreateTriangleMesh        CreateTriangleMesh;        // x86::remixapi_MeshInfo*
     PFN_bridgeapi_DestroyMesh               DestroyMesh;               // uint64_t handle
     PFN_bridgeapi_DrawMeshInstance          DrawMeshInstance;          // uint64_t handle --- x86::remixapi_Transform* t --- x86::remixapi_Bool double_sided
-    PFN_bridgeapi_CreateSphereLight         CreateSphereLight;         // x86::remixapi_LightInfo* info --- x86::remixapi_LightInfoSphereEXT* sphere_info
-    PFN_bridgeapi_CreateRectLight           CreateRectLight;           // x86::remixapi_LightInfo* info --- x86::remixapi_LightInfoRectEXT* rect_info
-    PFN_bridgeapi_CreateDiskLight           CreateDiskLight;           // x86::remixapi_LightInfo* info --- x86::remixapi_LightInfoDiskEXT* disk_info
-    PFN_bridgeapi_CreateCylinderLight       CreateCylinderLight;       // x86::remixapi_LightInfo* info --- x86::remixapi_LightInfoCylinderEXT* cylinder_info
-    PFN_bridgeapi_CreateDistantLight        CreateDistantLight;        // x86::remixapi_LightInfo* info --- x86::remixapi_LightInfoDistantEXT* dist_info
+    PFN_bridgeapi_CreateSphereLight         CreateSphereLight;         // x86::remixapi_LightInfo* --- x86::remixapi_LightInfoSphereEXT*
+    PFN_bridgeapi_CreateRectLight           CreateRectLight;           // x86::remixapi_LightInfo* --- x86::remixapi_LightInfoRectEXT*
+    PFN_bridgeapi_CreateDiskLight           CreateDiskLight;           // x86::remixapi_LightInfo* --- x86::remixapi_LightInfoDiskEXT*
+    PFN_bridgeapi_CreateCylinderLight       CreateCylinderLight;       // x86::remixapi_LightInfo* --- x86::remixapi_LightInfoCylinderEXT*
+    PFN_bridgeapi_CreateDistantLight        CreateDistantLight;        // x86::remixapi_LightInfo* --- x86::remixapi_LightInfoDistantEXT*
     PFN_bridgeapi_DestroyLight              DestroyLight;              // uint64_t handle
     PFN_bridgeapi_DrawLightInstance         DrawLightInstance;         // uint64_t handle
     PFN_bridgeapi_SetConfigVariable         SetConfigVariable;         // const char* var --- const char* value
