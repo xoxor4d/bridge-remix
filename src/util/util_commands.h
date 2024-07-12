@@ -39,6 +39,7 @@ namespace Commands {
     Bridge_DebugMessage,
 
     Api_CreateOpaqueMaterial,
+    Api_CreateTranslucentMaterial,
     Api_DestroyMaterial,
     Api_CreateTriangleMesh,
     Api_DestroyMesh,
@@ -480,6 +481,7 @@ namespace Commands {
     case Bridge_DebugMessage: return "DebugMessage";
 
     case Api_CreateOpaqueMaterial: return "ApiCreateOpaqueMaterial";
+    case Api_CreateTranslucentMaterial: return "ApiCreateTranslucentMaterial";
     case Api_DestroyMaterial: return "ApiDestroyMaterial";
     case Api_CreateTriangleMesh: return "ApiCreateTriangleMesh";
     case Api_DestroyMesh: return "ApiDestroyMesh";
