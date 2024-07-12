@@ -2792,7 +2792,7 @@ void ProcessDeviceCommandQueue() {
           ext.transmittanceMeasurementDistance = NVPULL_FLOAT();
           ext.thinWallThickness_hasvalue = NVPULL_U32();
           ext.thinWallThickness_value = NVPULL_FLOAT();
-          ext.thinWallThickness_hasvalue = NVPULL_U32();
+          ext.useDiffuseLayer = NVPULL_U32();
         }
 
         // assign ext
