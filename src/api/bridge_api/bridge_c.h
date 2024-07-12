@@ -166,7 +166,18 @@ extern "C" {
       uint8_t             alphaReferenceValue;
     } remixapi_MaterialInfoOpaqueEXT;
 
-    // # TODO remixapi_MaterialInfoOpaqueSubsurfaceEXT
+    // Valid only if remixapi_MaterialInfo contains remixapi_MaterialInfoOpaqueEXT in pNext chain
+    typedef struct remixapi_MaterialInfoOpaqueSubsurfaceEXT {
+      remixapi_StructType sType;
+      //void* pNext;
+      remixapi_Path       subsurfaceTransmittanceTexture;
+      remixapi_Path       subsurfaceThicknessTexture;
+      remixapi_Path       subsurfaceSingleScatteringAlbedoTexture;
+      remixapi_Float3D    subsurfaceTransmittanceColor;
+      float               subsurfaceMeasurementDistance;
+      remixapi_Float3D    subsurfaceSingleScatteringAlbedo;
+      float               subsurfaceVolumetricAnisotropy;
+    } remixapi_MaterialInfoOpaqueSubsurfaceEXT;
 
     typedef struct remixapi_MaterialInfoTranslucentEXT {
       remixapi_StructType sType;
@@ -326,7 +337,7 @@ extern "C" {
 
 
   typedef void(BRIDGEAPI_PTR* PFN_bridgeapi_DebugPrint)(const char* text);
-  typedef uint64_t(BRIDGEAPI_PTR* PFN_bridgeapi_CreateOpaqueMaterial)(const x86::remixapi_MaterialInfo* info, const x86::remixapi_MaterialInfoOpaqueEXT* ext);
+  typedef uint64_t(BRIDGEAPI_PTR* PFN_bridgeapi_CreateOpaqueMaterial)(const x86::remixapi_MaterialInfo* info, const x86::remixapi_MaterialInfoOpaqueEXT* ext, const x86::remixapi_MaterialInfoOpaqueSubsurfaceEXT* ext_ss);
   typedef uint64_t(BRIDGEAPI_PTR* PFN_bridgeapi_CreateTranslucentMaterial)(const x86::remixapi_MaterialInfo* info, const x86::remixapi_MaterialInfoTranslucentEXT* ext);
   typedef void(BRIDGEAPI_PTR* PFN_bridgeapi_DestroyMaterial)(uint64_t handle);
   typedef uint64_t(BRIDGEAPI_PTR* PFN_bridgeapi_CreateTriangleMesh)(const x86::remixapi_MeshInfo* info);

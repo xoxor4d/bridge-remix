@@ -2732,8 +2732,25 @@ void ProcessDeviceCommandQueue() {
           ext.alphaReferenceValue = (uint8_t) DeviceBridge::get_data();
         }
 
-        // assign ext
-        info.pNext = &ext;
+        remixapi_MaterialInfoOpaqueSubsurfaceEXT ext_ss = {};
+        const remixapi_Bool has_ss = NVPULL_U32();
+        if (has_ss) {
+          ext_ss.sType = NVPULL_STYPE();
+          NVPULL_DATA(ext_ss.subsurfaceTransmittanceTexture);
+          NVPULL_DATA(ext_ss.subsurfaceThicknessTexture);
+          NVPULL_DATA(ext_ss.subsurfaceSingleScatteringAlbedoTexture);
+          ext_ss.subsurfaceTransmittanceColor = NVPULL_FLOAT3D();
+          ext_ss.subsurfaceMeasurementDistance = NVPULL_FLOAT();
+          ext_ss.subsurfaceSingleScatteringAlbedo = NVPULL_FLOAT3D();
+          ext_ss.subsurfaceVolumetricAnisotropy = NVPULL_FLOAT();
+
+          // MaterialInfo -> OpaqueSubsurfaceEXT -> OpaqueEXT
+          ext_ss.pNext = &ext;
+          info.pNext = &ext_ss;
+        }
+        else { // no subsurface
+          info.pNext = &ext; // MaterialInfo -> OpaqueEXT
+        }
 
         remixapi_MaterialHandle temp_handle = nullptr;
         /*auto s =*/ BridgeApiSV::g_remix.CreateMaterial(&info, &temp_handle);

@@ -75,7 +75,7 @@ namespace {
     command.send_data(strlen(text), (void*) text);
   }
 
-  uint64_t BRIDGEAPI_CALL bridgeapi_CreateOpaqueMaterial(const x86::remixapi_MaterialInfo* info, const x86::remixapi_MaterialInfoOpaqueEXT* ext) {
+  uint64_t BRIDGEAPI_CALL bridgeapi_CreateOpaqueMaterial(const x86::remixapi_MaterialInfo* info, const x86::remixapi_MaterialInfoOpaqueEXT* ext, const x86::remixapi_MaterialInfoOpaqueSubsurfaceEXT* ext_ss) {
     UID currentUID = 0;
     {
       ClientMessage c(Commands::Api_CreateOpaqueMaterial);
@@ -118,6 +118,21 @@ namespace {
       SEND_U32(c, ext->invertedBlend);
       SEND_INT(c, ext->alphaTestType);
       c.send_data((uint8_t) ext->alphaReferenceValue);
+
+      const x86::remixapi_Bool has_ss = ext_ss ? TRUE : FALSE;
+      SEND_U32(c, has_ss);
+
+      if (ext_ss) {
+        // MaterialInfoOpaqueSubsurfaceEXT
+        SEND_STYPE(c, ext_ss->sType);
+        SEND_PATH(c, ext_ss->subsurfaceTransmittanceTexture);
+        SEND_PATH(c, ext_ss->subsurfaceThicknessTexture);
+        SEND_PATH(c, ext_ss->subsurfaceSingleScatteringAlbedoTexture);
+        SEND_FLOAT3D(c, ext_ss->subsurfaceTransmittanceColor);
+        SEND_FLOAT(c, ext_ss->subsurfaceMeasurementDistance);
+        SEND_FLOAT3D(c, ext_ss->subsurfaceSingleScatteringAlbedo);
+        SEND_FLOAT(c, ext_ss->subsurfaceVolumetricAnisotropy);
+      }
     }
 
     WAIT_FOR_SERVER_RESPONSE("CreateMaterial()", 0, currentUID);
