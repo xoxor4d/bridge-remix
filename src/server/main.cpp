@@ -101,16 +101,26 @@ using namespace bridge_util;
             const auto& name = map[name##Handle]; \
             assert(name != NULL)
 
-// Pull without creating a local var
 #define NVPULL_STYPE() (remixapi_StructType) DeviceBridge::get_data()
 #define NVPULL_I() (int32_t) DeviceBridge::get_data()
 #define NVPULL_U32() (uint32_t) DeviceBridge::get_data()
+
 #define NVPULL_U64(DEST) { \
-            uint64_t* result = nullptr; \
-            uint32_t len = DeviceBridge::get_data((void**)&result); \
-            assert(len == 0 || sizeof(uint64_t) == len); \
-            (DEST) = *result; \
+            uint64_t* r = nullptr; \
+            uint32_t s = DeviceBridge::get_data((void**)&r); \
+            assert(s == 0 || sizeof(uint64_t) == s); \
+            (DEST) = *r; \
             }
+
+// std::wstring --- remixapi_Path
+// make sure that TEMP does not go out of scope before calling the api function
+#define NVPULL_PATH(TEMP, DEST) { \
+            wchar_t* t = nullptr; \
+            const uint32_t len = DeviceBridge::getReaderChannel().data->pull((void**) &t) / sizeof(wchar_t); \
+            (TEMP) = std::wstring(t, len); \
+            (DEST) = (TEMP).c_str(); \
+            }
+
 #define NVPULL_DATA(DEST) DeviceBridge::getReaderChannel().data->pull((void**) &(DEST));
 #define NVPULL_FLOAT() *(float*)(&DeviceBridge::get_data())
 #define NVPULL_FLOAT2D() { NVPULL_FLOAT(), NVPULL_FLOAT() }
@@ -2707,16 +2717,15 @@ void ProcessDeviceCommandQueue() {
 
       case Api_CreateOpaqueMaterial:
       {
+        std::wstring albedo {}, normal {}, tangent {}, emissive {}, rough {}, metal {}, height {}, sstrans {}, ssthick {}, ssscatter {};
         remixapi_MaterialInfo info = {};
         {
           info.sType = NVPULL_STYPE();
           NVPULL_U64(info.hash);
-
-          NVPULL_DATA(info.albedoTexture);
-          NVPULL_DATA(info.normalTexture);
-          NVPULL_DATA(info.tangentTexture);
-          NVPULL_DATA(info.emissiveTexture);
-
+          NVPULL_PATH(albedo, info.albedoTexture);
+          NVPULL_PATH(normal, info.normalTexture);
+          NVPULL_PATH(tangent, info.tangentTexture);
+          NVPULL_PATH(emissive, info.emissiveTexture);
           info.emissiveIntensity = NVPULL_FLOAT();
           info.emissiveColorConstant = NVPULL_FLOAT3D();
           info.spriteSheetRow = (uint8_t) DeviceBridge::get_data();
@@ -2730,8 +2739,8 @@ void ProcessDeviceCommandQueue() {
         remixapi_MaterialInfoOpaqueEXT ext = {};
         {
           ext.sType = NVPULL_STYPE();
-          NVPULL_DATA(ext.roughnessTexture);
-          NVPULL_DATA(ext.metallicTexture);
+          NVPULL_PATH(rough, ext.roughnessTexture);
+          NVPULL_PATH(metal, ext.metallicTexture);
           ext.anisotropy = NVPULL_FLOAT();
           ext.albedoConstant = NVPULL_FLOAT3D();
           ext.opacityConstant = NVPULL_FLOAT();
@@ -2740,7 +2749,7 @@ void ProcessDeviceCommandQueue() {
           ext.thinFilmThickness_hasvalue = NVPULL_U32();
           ext.thinFilmThickness_value = NVPULL_FLOAT();
           ext.alphaIsThinFilmThickness = NVPULL_U32();
-          NVPULL_DATA(ext.heightTexture);
+          NVPULL_PATH(height, ext.heightTexture);
           ext.heightTextureStrength = NVPULL_FLOAT();
           ext.useDrawCallAlphaState = NVPULL_U32(); // If true, InstanceInfoBlendEXT is used as a source for alpha state
           ext.blendType_hasvalue = NVPULL_U32();
@@ -2754,9 +2763,9 @@ void ProcessDeviceCommandQueue() {
         const remixapi_Bool has_ss = NVPULL_U32();
         if (has_ss) {
           ext_ss.sType = NVPULL_STYPE();
-          NVPULL_DATA(ext_ss.subsurfaceTransmittanceTexture);
-          NVPULL_DATA(ext_ss.subsurfaceThicknessTexture);
-          NVPULL_DATA(ext_ss.subsurfaceSingleScatteringAlbedoTexture);
+          NVPULL_PATH(sstrans, ext_ss.subsurfaceTransmittanceTexture);
+          NVPULL_PATH(ssthick, ext_ss.subsurfaceThicknessTexture);
+          NVPULL_PATH(ssscatter, ext_ss.subsurfaceSingleScatteringAlbedoTexture);
           ext_ss.subsurfaceTransmittanceColor = NVPULL_FLOAT3D();
           ext_ss.subsurfaceMeasurementDistance = NVPULL_FLOAT();
           ext_ss.subsurfaceSingleScatteringAlbedo = NVPULL_FLOAT3D();
@@ -2780,15 +2789,15 @@ void ProcessDeviceCommandQueue() {
 
       case Api_CreateTranslucentMaterial:
       {
+        std::wstring albedo {}, normal {}, tangent {}, emissive {}, transmittance {};
         remixapi_MaterialInfo info = {};
         {
           info.sType = NVPULL_STYPE();
           NVPULL_U64(info.hash);
-
-          NVPULL_DATA(info.albedoTexture);
-          NVPULL_DATA(info.normalTexture);
-          NVPULL_DATA(info.tangentTexture);
-          NVPULL_DATA(info.emissiveTexture);
+          NVPULL_PATH(albedo, info.albedoTexture);
+          NVPULL_PATH(normal, info.normalTexture);
+          NVPULL_PATH(tangent, info.tangentTexture);
+          NVPULL_PATH(emissive, info.emissiveTexture);
 
           info.emissiveIntensity = NVPULL_FLOAT();
           info.emissiveColorConstant = NVPULL_FLOAT3D();
@@ -2803,7 +2812,7 @@ void ProcessDeviceCommandQueue() {
         remixapi_MaterialInfoTranslucentEXT ext = {};
         {
           ext.sType = NVPULL_STYPE();
-          NVPULL_DATA(ext.transmittanceTexture);
+          NVPULL_PATH(transmittance, ext.transmittanceTexture);
           ext.refractiveIndex = NVPULL_FLOAT();
           ext.transmittanceColor = NVPULL_FLOAT3D();
           ext.transmittanceMeasurementDistance = NVPULL_FLOAT();
@@ -3132,6 +3141,7 @@ void ProcessDeviceCommandQueue() {
         }
         break;
       }
+
       case Api_DrawLightInstance:
       {
         uint64_t light_handle = 0u; NVPULL_U64(light_handle);

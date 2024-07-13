@@ -197,9 +197,9 @@ extern "C" {
       uint8_t             spriteSheetRow;
       uint8_t             spriteSheetCol;
       uint8_t             spriteSheetFps;
-      uint8_t             filterMode;
-      uint8_t             wrapModeU;
-      uint8_t             wrapModeV;
+      uint8_t             filterMode; // Nearest: 0   Linear: 1
+      uint8_t             wrapModeU; // Clamp: 0   Repeat: 1   Mirrored_Repeat: 2   Clip: 3
+      uint8_t             wrapModeV; // Clamp: 0   Repeat: 1   Mirrored_Repeat: 2   Clip: 3
     } remixapi_MaterialInfo;
 
 
