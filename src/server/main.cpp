@@ -2701,7 +2701,7 @@ void ProcessDeviceCommandQueue() {
       {
         void* text_ptr = nullptr;
         const uint32_t text_size = DeviceBridge::getReaderChannel().data->pull(&text_ptr);
-        Logger::info(((const char*) text_ptr, text_size));
+        Logger::info(std::string((const char*) text_ptr, text_size));
         break;
       }
 
