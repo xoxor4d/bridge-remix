@@ -70,9 +70,11 @@ namespace BridgeApiCL {
 
 namespace {
   void BRIDGEAPI_CALL bridgeapi_DebugPrint(const char* text) {
-    ClientMessage command(Commands::Bridge_DebugMessage);
-    command.send_data(1337);
-    command.send_data(strlen(text), (void*) text);
+    if (text) {
+      ClientMessage c(Commands::Api_DebugPrint);
+      c.send_data(0);
+      c.send_data((uint32_t) strlen(text), text);
+    }
   }
 
   uint64_t BRIDGEAPI_CALL bridgeapi_CreateOpaqueMaterial(const x86::remixapi_MaterialInfo* info, const x86::remixapi_MaterialInfoOpaqueEXT* ext, const x86::remixapi_MaterialInfoOpaqueSubsurfaceEXT* ext_ss) {
@@ -427,9 +429,13 @@ namespace {
   }
 
   void BRIDGEAPI_CALL bridgeapi_SetConfigVariable(const char* var, const char* value) {
-    ClientMessage command(Commands::Api_SetConfigVariable);
-    command.send_data(strlen(var), (void*) var);
-    command.send_data(strlen(value), (void*) value);
+    if (var && value)
+    {
+      ClientMessage c(Commands::Api_SetConfigVariable);
+      c.send_data((uint32_t) strlen(var), var);
+      c.send_data((uint32_t) strlen(value), value);
+     // Logger::debug("Send var: " + std::string(var) + " (" + std::to_string((uint32_t) strlen(var)) + ") --- with value: " + std::string(value) + " (" + std::to_string((uint32_t) strlen(value)) + ")");
+    }
   }
 
   void BRIDGEAPI_CALL bridgeapi_RegisterDevice() {

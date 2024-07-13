@@ -2661,30 +2661,16 @@ void ProcessDeviceCommandQueue() {
         break;
       }
 
-
-
-
-
-
-
-
-
-      // ######################################################################################################
-      // ######################################################################################################
-      // ######################################################################################################
-      // ######################################################################################################
-      // ######################################################################################################
-      // ######################################################################################################
-      // ######################################################################################################
-      // ##################### here so I can quickly find it in the scrollbar map #############################
-      // ######################################################################################################
-      // ######################################################################################################
-      // ######################################################################################################
-      // ######################################################################################################
-      // ######################################################################################################
-      // ######################################################################################################
-      // ######################################################################################################
-
+      /*
+       * BridgeApi commands
+       */
+      case Api_DebugPrint:
+      {
+        void* text_ptr = nullptr;
+        const uint32_t text_size = DeviceBridge::getReaderChannel().data->pull(&text_ptr);
+        Logger::info(((const char*) text_ptr, text_size));
+        break;
+      }
 
       case Api_CreateOpaqueMaterial:
       {
@@ -2693,10 +2679,10 @@ void ProcessDeviceCommandQueue() {
           info.sType = NVPULL_STYPE();
           NVPULL_U64(info.hash);
 
-          NVPULL_DATA(info.albedoTexture); //info.albedoTexture = L"";
-          NVPULL_DATA(info.normalTexture); //info.normalTexture = L"";
-          NVPULL_DATA(info.tangentTexture); //info.tangentTexture = L"";
-          NVPULL_DATA(info.emissiveTexture); //info.emissiveTexture = L"";
+          NVPULL_DATA(info.albedoTexture);
+          NVPULL_DATA(info.normalTexture);
+          NVPULL_DATA(info.tangentTexture);
+          NVPULL_DATA(info.emissiveTexture);
 
           info.emissiveIntensity = NVPULL_FLOAT();
           info.emissiveColorConstant = NVPULL_FLOAT3D();
@@ -2711,8 +2697,8 @@ void ProcessDeviceCommandQueue() {
         remixapi_MaterialInfoOpaqueEXT ext = {};
         {
           ext.sType = NVPULL_STYPE();
-          NVPULL_DATA(ext.roughnessTexture); //ext.roughnessTexture = L"";
-          NVPULL_DATA(ext.metallicTexture); //ext.metallicTexture = L"";
+          NVPULL_DATA(ext.roughnessTexture);
+          NVPULL_DATA(ext.metallicTexture);
           ext.anisotropy = NVPULL_FLOAT();
           ext.albedoConstant = NVPULL_FLOAT3D();
           ext.opacityConstant = NVPULL_FLOAT();
@@ -2721,10 +2707,9 @@ void ProcessDeviceCommandQueue() {
           ext.thinFilmThickness_hasvalue = NVPULL_U32();
           ext.thinFilmThickness_value = NVPULL_FLOAT();
           ext.alphaIsThinFilmThickness = NVPULL_U32();
-          NVPULL_DATA(ext.heightTexture); //ext.heightTexture = L"";
+          NVPULL_DATA(ext.heightTexture);
           ext.heightTextureStrength = NVPULL_FLOAT();
-          // If true, InstanceInfoBlendEXT is used as a source for alpha state
-          ext.useDrawCallAlphaState = NVPULL_U32();
+          ext.useDrawCallAlphaState = NVPULL_U32(); // If true, InstanceInfoBlendEXT is used as a source for alpha state
           ext.blendType_hasvalue = NVPULL_U32();
           ext.blendType_value = NVPULL_I();
           ext.invertedBlend = NVPULL_U32();
@@ -2768,10 +2753,10 @@ void ProcessDeviceCommandQueue() {
           info.sType = NVPULL_STYPE();
           NVPULL_U64(info.hash);
 
-          NVPULL_DATA(info.albedoTexture); //info.albedoTexture = L"";
-          NVPULL_DATA(info.normalTexture); //info.normalTexture = L"";
-          NVPULL_DATA(info.tangentTexture); //info.tangentTexture = L"";
-          NVPULL_DATA(info.emissiveTexture); //info.emissiveTexture = L"";
+          NVPULL_DATA(info.albedoTexture);
+          NVPULL_DATA(info.normalTexture);
+          NVPULL_DATA(info.tangentTexture);
+          NVPULL_DATA(info.emissiveTexture);
 
           info.emissiveIntensity = NVPULL_FLOAT();
           info.emissiveColorConstant = NVPULL_FLOAT3D();
@@ -2786,7 +2771,7 @@ void ProcessDeviceCommandQueue() {
         remixapi_MaterialInfoTranslucentEXT ext = {};
         {
           ext.sType = NVPULL_STYPE();
-          NVPULL_DATA(ext.transmittanceTexture); //opaque_info.roughnessTexture = L"";
+          NVPULL_DATA(ext.transmittanceTexture);
           ext.refractiveIndex = NVPULL_FLOAT();
           ext.transmittanceColor = NVPULL_FLOAT3D();
           ext.transmittanceMeasurementDistance = NVPULL_FLOAT();
@@ -2825,7 +2810,6 @@ void ProcessDeviceCommandQueue() {
         remixapi_MeshInfo info = {};
         {
           info.sType = NVPULL_STYPE();
-          // pNext
           NVPULL_U64(info.hash);
           info.surfaces_count = NVPULL_U32(); // surface count before surfaces
         }
@@ -2912,7 +2896,7 @@ void ProcessDeviceCommandQueue() {
           inst.sType = REMIXAPI_STRUCT_TYPE_INSTANCE_INFO;
           inst.categoryFlags = 0;
           inst.mesh = (remixapi_MeshHandle) mesh_handle;
-          inst.transform = { {NVPULL_FLOAT4D(), NVPULL_FLOAT4D(), NVPULL_FLOAT4D()} }; // = { {{1,0,0,0}, {0,1,0,0}, {0,0,1,0}} };
+          inst.transform = { {NVPULL_FLOAT4D(), NVPULL_FLOAT4D(), NVPULL_FLOAT4D()} };
           inst.doubleSided = NVPULL_U32();
         }
 
@@ -2930,7 +2914,6 @@ void ProcessDeviceCommandQueue() {
         remixapi_LightInfo l = {};
         {
           l.sType = NVPULL_STYPE();
-          // pNext
           NVPULL_U64(l.hash);
           l.radiance = NVPULL_FLOAT3D();
         }
@@ -2968,7 +2951,6 @@ void ProcessDeviceCommandQueue() {
         remixapi_LightInfo l = {};
         {
           l.sType = NVPULL_STYPE();
-          // pNext
           NVPULL_U64(l.hash);
           l.radiance = NVPULL_FLOAT3D();
         }
@@ -3010,7 +2992,6 @@ void ProcessDeviceCommandQueue() {
         remixapi_LightInfo l = {};
         {
           l.sType = NVPULL_STYPE();
-          // pNext
           NVPULL_U64(l.hash);
           l.radiance = NVPULL_FLOAT3D();
         }
@@ -3052,7 +3033,6 @@ void ProcessDeviceCommandQueue() {
         remixapi_LightInfo l = {};
         {
           l.sType = NVPULL_STYPE();
-          // pNext
           NVPULL_U64(l.hash);
           l.radiance = NVPULL_FLOAT3D();
         }
@@ -3084,7 +3064,6 @@ void ProcessDeviceCommandQueue() {
         remixapi_LightInfo l = {};
         {
           l.sType = NVPULL_STYPE();
-          // pNext
           NVPULL_U64(l.hash);
           l.radiance = NVPULL_FLOAT3D();
         }
@@ -3136,19 +3115,22 @@ void ProcessDeviceCommandQueue() {
 
       case Api_SetConfigVariable:
       {
-        void* var_text = nullptr;
-        const int var_length = DeviceBridge::getReaderChannel().data->peek();
-        const int var_size = DeviceBridge::getReaderChannel().data->pull(&var_text);
+        // the returned size of the string is correct but
+        // the const char* is not null terminated so its possible that it
+        // contains junk data at the end due to the 4 byte sized rpc chuncks? 
 
-        void* value_text = nullptr;
-        const int value_length = DeviceBridge::getReaderChannel().data->peek();
-        const int value_size = DeviceBridge::getReaderChannel().data->pull(&value_text);
+        void* var_ptr = nullptr;
+        const uint32_t var_size = DeviceBridge::getReaderChannel().data->pull(&var_ptr);
+        std::string var_str((const char*) var_ptr, var_size); 
 
-        /*auto s =*/ BridgeApiSV::g_remix.SetConfigVariable((const char*) var_text, (const char*) value_text);
+        void* value_ptr = nullptr;
+        const uint32_t value_size = DeviceBridge::getReaderChannel().data->pull(&value_ptr);
+        std::string value_str((const char*) value_ptr, value_size);
+
+        /*auto s =*/ BridgeApiSV::g_remix.SetConfigVariable(var_str.c_str(), value_str.c_str());
         //Logger::debug("[BridgeApi-SV] RemixApi::SetConfigVariable() returned status [" + std::to_string(s) + "]");
-
-        //Logger::debug("[BridgeApi-SV] Config Var: \"" + std::string((char*) var_text) + "\" with len/size: " + std::to_string(var_length) + " / " + std::to_string(var_size));
-        //Logger::debug("|> Config Value: \"" + std::string((char*) value_text) + "\" with len/size: " + std::to_string(value_length) + " / " + std::to_string(value_size));
+        //Logger::debug("|> Config Var: \"" + var_str + "\" with size: " + std::to_string(var_size));
+        //Logger::debug("|> Config Value: \"" + value_str + "\" with size: " + std::to_string(value_size));
         break;
       }
 
@@ -3165,8 +3147,6 @@ void ProcessDeviceCommandQueue() {
         }
         break;
       }
-
-
 
       case Bridge_Terminate:
       {

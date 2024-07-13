@@ -38,6 +38,7 @@ namespace Commands {
     Bridge_Response,
     Bridge_DebugMessage,
 
+    Api_DebugPrint,
     Api_CreateOpaqueMaterial,
     Api_CreateTranslucentMaterial,
     Api_DestroyMaterial,
@@ -480,6 +481,7 @@ namespace Commands {
     case Bridge_Response: return "Response";
     case Bridge_DebugMessage: return "DebugMessage";
 
+    case Api_DebugPrint: return "ApiDebugPrint";
     case Api_CreateOpaqueMaterial: return "ApiCreateOpaqueMaterial";
     case Api_CreateTranslucentMaterial: return "ApiCreateTranslucentMaterial";
     case Api_DestroyMaterial: return "ApiDestroyMaterial";
