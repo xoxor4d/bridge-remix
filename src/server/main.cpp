@@ -2660,6 +2660,39 @@ void ProcessDeviceCommandQueue() {
         Logger::info(ss.str().c_str());
         break;
       }
+      case Bridge_Terminate:
+      {
+        done = true;
+        break;
+      }
+      case Bridge_SharedHeap_AddSeg:
+      {
+        GET_HDR_VAL(_segmentSize);
+        const uint32_t segmentSize = (uint32_t) _segmentSize;
+        SharedHeap::addNewHeapSegment(segmentSize);
+        break;
+      }
+      case Bridge_SharedHeap_Alloc:
+      {
+        GET_HDR_VAL(_allocId);
+        const auto allocId = (SharedHeap::AllocId) _allocId;
+        PULL_U(chunkId);
+        SharedHeap::allocate(allocId, chunkId);
+        break;
+      }
+      case Bridge_SharedHeap_Dealloc:
+      {
+        GET_HDR_VAL(_allocId);
+        const auto allocId = (SharedHeap::AllocId) _allocId;
+        SharedHeap::deallocate(allocId);
+        break;
+      }
+      case Bridge_UnlinkResource:
+      {
+        GET_HND(pHandle);
+        gpD3DResources.erase(pHandle);
+        break;
+      }
 
       /*
        * BridgeApi commands
@@ -2732,8 +2765,7 @@ void ProcessDeviceCommandQueue() {
           // MaterialInfo -> OpaqueSubsurfaceEXT -> OpaqueEXT
           ext_ss.pNext = &ext;
           info.pNext = &ext_ss;
-        }
-        else { // no subsurface
+        } else { // no subsurface
           info.pNext = &ext; // MaterialInfo -> OpaqueEXT
         }
 
@@ -2846,20 +2878,20 @@ void ProcessDeviceCommandQueue() {
           uint32_t skinning_hasvalue = NVPULL_U32();
           uint64_t material_handle = 0u; NVPULL_U64(material_handle)
 
-          //Logger::debug("[BridgeApi-SV] RemixApi::CreateTriangleMesh() handle u32 [" + std::to_string((uint32_t)material_handle) + "]");
-          //Logger::debug("[BridgeApi-SV] RemixApi::CreateTriangleMesh() handle u64 [" + std::to_string((uint64_t) material_handle) + "]");
+            //Logger::debug("[BridgeApi-SV] RemixApi::CreateTriangleMesh() handle u32 [" + std::to_string((uint32_t)material_handle) + "]");
+            //Logger::debug("[BridgeApi-SV] RemixApi::CreateTriangleMesh() handle u64 [" + std::to_string((uint64_t) material_handle) + "]");
 
-          // build the surface struct
-          surfs.emplace_back(remixapi_MeshInfoSurfaceTriangles 
-          {
-            verts.back().data(),
-            vertex_count,
-            indices.back().data(),
-            index_count,
-            skinning_hasvalue,
-            remixapi_MeshInfoSkinning {},
-            (remixapi_MaterialHandle) material_handle
-          });
+            // build the surface struct
+            surfs.emplace_back(remixapi_MeshInfoSurfaceTriangles
+            {
+              verts.back().data(),
+              vertex_count,
+              indices.back().data(),
+              index_count,
+              skinning_hasvalue,
+              remixapi_MeshInfoSkinning {},
+              (remixapi_MaterialHandle) material_handle
+            });
         }
 
         // remixapi_MeshInfo
@@ -3121,7 +3153,7 @@ void ProcessDeviceCommandQueue() {
 
         void* var_ptr = nullptr;
         const uint32_t var_size = DeviceBridge::getReaderChannel().data->pull(&var_ptr);
-        std::string var_str((const char*) var_ptr, var_size); 
+        std::string var_str((const char*) var_ptr, var_size);
 
         void* value_ptr = nullptr;
         const uint32_t value_size = DeviceBridge::getReaderChannel().data->pull(&value_ptr);
@@ -3145,40 +3177,6 @@ void ProcessDeviceCommandQueue() {
             Logger::warn("[BridgeApi-SV] Failed to get d3d9 device!");
           }
         }
-        break;
-      }
-
-      case Bridge_Terminate:
-      {
-        done = true;
-        break;
-      }
-      case Bridge_SharedHeap_AddSeg:
-      {
-        GET_HDR_VAL(_segmentSize);
-        const uint32_t segmentSize = (uint32_t) _segmentSize;
-        SharedHeap::addNewHeapSegment(segmentSize);
-        break;
-      }
-      case Bridge_SharedHeap_Alloc:
-      {
-        GET_HDR_VAL(_allocId);
-        const auto allocId = (SharedHeap::AllocId) _allocId;
-        PULL_U(chunkId);
-        SharedHeap::allocate(allocId, chunkId);
-        break;
-      }
-      case Bridge_SharedHeap_Dealloc:
-      {
-        GET_HDR_VAL(_allocId);
-        const auto allocId = (SharedHeap::AllocId) _allocId;
-        SharedHeap::deallocate(allocId);
-        break;
-      }
-      case Bridge_UnlinkResource:
-      {
-        GET_HND(pHandle);
-        gpD3DResources.erase(pHandle);
         break;
       }
       default:
