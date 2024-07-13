@@ -182,7 +182,12 @@ extern "C" {
       remixapi_Bool       useDiffuseLayer;
     } remixapi_MaterialInfoTranslucentEXT;
 
-    // # TODO remixapi_MaterialInfoPortalEXT
+    typedef struct remixapi_MaterialInfoPortalEXT {
+      remixapi_StructType sType;
+      //void* pNext;
+      uint8_t             rayPortalIndex;
+      float               rotationSpeed;
+    } remixapi_MaterialInfoPortalEXT;
 
     typedef struct remixapi_MaterialInfo {
       remixapi_StructType sType;
@@ -321,6 +326,7 @@ extern "C" {
   typedef void(BRIDGEAPI_PTR* PFN_bridgeapi_DebugPrint)(const char* text);
   typedef uint64_t(BRIDGEAPI_PTR* PFN_bridgeapi_CreateOpaqueMaterial)(const x86::remixapi_MaterialInfo* info, const x86::remixapi_MaterialInfoOpaqueEXT* ext, const x86::remixapi_MaterialInfoOpaqueSubsurfaceEXT* ext_ss);
   typedef uint64_t(BRIDGEAPI_PTR* PFN_bridgeapi_CreateTranslucentMaterial)(const x86::remixapi_MaterialInfo* info, const x86::remixapi_MaterialInfoTranslucentEXT* ext);
+  typedef uint64_t(BRIDGEAPI_PTR* PFN_bridgeapi_CreatePortalMaterial)(const x86::remixapi_MaterialInfo* info, const x86::remixapi_MaterialInfoPortalEXT* ext);
   typedef void(BRIDGEAPI_PTR* PFN_bridgeapi_DestroyMaterial)(uint64_t handle);
   typedef uint64_t(BRIDGEAPI_PTR* PFN_bridgeapi_CreateTriangleMesh)(const x86::remixapi_MeshInfo* info);
   typedef void(BRIDGEAPI_PTR* PFN_bridgeapi_DestroyMesh)(uint64_t handle);
@@ -341,6 +347,7 @@ extern "C" {
     PFN_bridgeapi_DebugPrint                DebugPrint;                // const char* text
     PFN_bridgeapi_CreateOpaqueMaterial      CreateOpaqueMaterial;      // x86::remixapi_MaterialInfo*
     PFN_bridgeapi_CreateTranslucentMaterial CreateTranslucentMaterial; // x86::remixapi_MaterialInfo* --- x86::remixapi_MaterialInfoTranslucentEXT*
+    PFN_bridgeapi_CreatePortalMaterial      CreatePortalMaterial;      // x86::remixapi_MaterialInfo* --- x86::remixapi_MaterialInfoPortalEXT*
     PFN_bridgeapi_DestroyMaterial           DestroyMaterial;           // uint64_t handle
     PFN_bridgeapi_CreateTriangleMesh        CreateTriangleMesh;        // x86::remixapi_MeshInfo*
     PFN_bridgeapi_DestroyMesh               DestroyMesh;               // uint64_t handle

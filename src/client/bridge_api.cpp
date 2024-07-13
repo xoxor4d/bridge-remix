@@ -182,6 +182,41 @@ namespace {
     return *result;
   }
 
+  uint64_t BRIDGEAPI_CALL bridgeapi_CreatePortalMaterial(const x86::remixapi_MaterialInfo* info, const x86::remixapi_MaterialInfoPortalEXT* ext) {
+    UID currentUID = 0;
+    {
+      ClientMessage c(Commands::Api_CreatePortalMaterial);
+      currentUID = c.get_uid();
+
+      // MaterialInfo
+      SEND_STYPE(c, info->sType);
+      SEND_U64(c, info->hash);
+      SEND_PATH(c, info->albedoTexture);
+      SEND_PATH(c, info->normalTexture);
+      SEND_PATH(c, info->tangentTexture);
+      SEND_PATH(c, info->emissiveTexture);
+      SEND_FLOAT(c, info->emissiveIntensity);
+      SEND_FLOAT3D(c, info->emissiveColorConstant);
+      c.send_data((uint8_t) info->spriteSheetRow);
+      c.send_data((uint8_t) info->spriteSheetCol);
+      c.send_data((uint8_t) info->spriteSheetFps);
+      c.send_data((uint8_t) info->filterMode);
+      c.send_data((uint8_t) info->wrapModeU);
+      c.send_data((uint8_t) info->wrapModeV);
+
+      // MaterialInfoPortalEXT
+      SEND_STYPE(c, ext->sType);
+      c.send_data((uint8_t) ext->rayPortalIndex);
+      SEND_FLOAT(c, ext->rotationSpeed);
+    }
+
+    WAIT_FOR_SERVER_RESPONSE("CreateMaterial()", 0, currentUID);
+    uint64_t* result = nullptr;
+    PULL_DATA(sizeof(uint64_t), result);
+    DeviceBridge::pop_front();
+    return *result;
+  }
+
   void BRIDGEAPI_CALL bridgeapi_DestroyMaterial(uint64_t handle) {
     ClientMessage c(Commands::Api_DestroyMaterial);
     SEND_U64(c, handle);
@@ -455,6 +490,7 @@ namespace {
         interf.DebugPrint = bridgeapi_DebugPrint;
         interf.CreateOpaqueMaterial = bridgeapi_CreateOpaqueMaterial;
         interf.CreateTranslucentMaterial = bridgeapi_CreateTranslucentMaterial;
+        interf.CreatePortalMaterial = bridgeapi_CreatePortalMaterial;
         interf.DestroyMaterial = bridgeapi_DestroyMaterial;
         interf.CreateTriangleMesh = bridgeapi_CreateTriangleMesh;
         interf.DestroyMesh = bridgeapi_DestroyMesh;

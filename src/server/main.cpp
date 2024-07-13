@@ -2833,6 +2833,47 @@ void ProcessDeviceCommandQueue() {
         break;
       }
 
+      case Api_CreatePortalMaterial:
+      {
+        std::wstring albedo {}, normal {}, tangent {}, emissive {};
+        remixapi_MaterialInfo info = {};
+        {
+          info.sType = NVPULL_STYPE();
+          NVPULL_U64(info.hash);
+          NVPULL_PATH(albedo, info.albedoTexture);
+          NVPULL_PATH(normal, info.normalTexture);
+          NVPULL_PATH(tangent, info.tangentTexture);
+          NVPULL_PATH(emissive, info.emissiveTexture);
+
+          info.emissiveIntensity = NVPULL_FLOAT();
+          info.emissiveColorConstant = NVPULL_FLOAT3D();
+          info.spriteSheetRow = (uint8_t) DeviceBridge::get_data();
+          info.spriteSheetCol = (uint8_t) DeviceBridge::get_data();
+          info.spriteSheetFps = (uint8_t) DeviceBridge::get_data();
+          info.filterMode = (uint8_t) DeviceBridge::get_data();
+          info.wrapModeU = (uint8_t) DeviceBridge::get_data();
+          info.wrapModeV = (uint8_t) DeviceBridge::get_data();
+        }
+
+        remixapi_MaterialInfoPortalEXT ext = {};
+        {
+          ext.sType = NVPULL_STYPE();
+          ext.rayPortalIndex = (uint8_t) DeviceBridge::get_data();
+          ext.rotationSpeed = NVPULL_FLOAT();
+        }
+
+        // assign ext
+        info.pNext = &ext;
+
+        remixapi_MaterialHandle temp_handle = nullptr;
+        /*auto s =*/ BridgeApiSV::g_remix.CreateMaterial(&info, &temp_handle);
+        //Logger::debug("[BridgeApi-SV] RemixApi::CreateMaterial() returned status [" + std::to_string(s) + "]");
+
+        ServerMessage c(Commands::Bridge_Response, currentUID);
+        c.send_data(sizeof(uint64_t), &temp_handle);
+        break;
+      }
+
       case Api_DestroyMaterial:
       {
         uint64_t material_handle = 0u; NVPULL_U64(material_handle);
