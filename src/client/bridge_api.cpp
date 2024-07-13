@@ -72,7 +72,6 @@ namespace {
   void BRIDGEAPI_CALL bridgeapi_DebugPrint(const char* text) {
     if (text) {
       ClientMessage c(Commands::Api_DebugPrint);
-      c.send_data(0);
       c.send_data((uint32_t) strlen(text), text);
     }
   }
