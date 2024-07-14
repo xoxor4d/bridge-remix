@@ -51,7 +51,7 @@
 #include <assert.h>
 #include <map>
 #include <atomic>
-#include <locale>
+
 #include "remix_api/remix_c.h"
 #include "bridge_api.h"
 #include "../client/client_options.h"
@@ -3198,8 +3198,8 @@ void ProcessDeviceCommandQueue() {
 
       case Api_SetConfigVariable:
       {
-        // the returned size of the string is correct but
-        // the const char* is not null terminated so its possible that it
+        // the returned size of the string is correct but the const char*
+        // might not be null terminated correctly so its possible that it
         // contains junk data at the end due to the 4 byte sized rpc chuncks? 
 
         void* var_ptr = nullptr;
