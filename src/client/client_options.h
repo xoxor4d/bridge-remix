@@ -62,8 +62,8 @@ namespace ClientOptions {
     return bridge_util::Config::getOption<bool>("client.enableDpiAwareness", true);
   }
 
-  inline bool getEnableBridgeApi() {
-    return bridge_util::Config::getOption<bool>("client.enableBridgeApi", true);
+  inline bool getExposeRemixApi() {
+    return bridge_util::Config::getOption<bool>("client.exposeRemixApi", false);
   }
 
   // If set, the space for data for dynamic buffer updates will be preallocated on data channel

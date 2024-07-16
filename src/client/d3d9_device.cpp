@@ -46,7 +46,7 @@
 #include <wingdi.h>
 #include <assert.h>
 
- #include "bridge_api.h"
+ #include "remix_api.h"
 
 #define GET_PRES_PARAM() (m_pSwapchain->getPresentationParameters())
 
@@ -1123,8 +1123,8 @@ HRESULT Direct3DDevice9Ex_LSS<EnableSync>::EndScene() {
     }
   }
 
-  if (BridgeApiCL::Initialized && BridgeApiCL::GameCallback) {
-    BridgeApiCL::GameCallback();
+  if (remix_api::interfaceInitialized && remix_api::interfaceGameCallback) {
+    remix_api::interfaceGameCallback();
   }
 
   UID currentUID = 0;

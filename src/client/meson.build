@@ -28,7 +28,6 @@ d3d9_version = vcs_tag(
 d3d9_res = wrc_generator.process(d3d9_version)
 
 d3d9_src = files([
-  'bridge_api.cpp',
   'd3d9_bootstrap.cpp',
   'd3d9_cubetexture.cpp',
   'd3d9_device_base.cpp',
@@ -50,12 +49,12 @@ d3d9_src = files([
   'd3d9_volumetexture.cpp',
   'di_hook.cpp',
   'pch.cpp',
+  'remix_api.cpp',
   'remix_state.cpp',
 ])
 
 d3d9_header = files([
   'base.h',
-  'bridge_api.h',
   'client_options.h',
   'd3d9_base_texture.h',
   'd3d9_commonshader.h',
@@ -82,6 +81,7 @@ d3d9_header = files([
   'framework.h',
   'lockable_buffer.h',
   'pch.h',
+  'remix_api.h',
   'remix_state.h',
   'resource.h',
   'shadow_map.h',

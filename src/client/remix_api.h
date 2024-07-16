@@ -21,9 +21,9 @@
  */
 #pragma once
 
-#include "bridge_api/bridge_c.h"
+#include "remix_api/bridge_c.h"
 
-namespace BridgeApiCL {
-  extern bool Initialized;
-  extern PFN_bridgeapi_RegisterEndSceneCallback GameCallback;
+namespace remix_api {
+  extern bool interfaceInitialized;
+  extern PFN_bridgeapi_RegisterEndSceneCallback interfaceGameCallback;
 }

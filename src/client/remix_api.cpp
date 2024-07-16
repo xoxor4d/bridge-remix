@@ -23,7 +23,7 @@
 #include "log/log.h"
 #include "util_bridgecommand.h"
 #include "util_devicecommand.h"
-#include "bridge_api.h"
+#include "remix_api.h"
 
 
 #define SEND_FLOAT(MSG, V) \
@@ -63,9 +63,9 @@
             uint32_t NAME##_len = DeviceBridge::get_data((void**)&(NAME)); \
             assert(NAME##_len == 0 || (SIZE) == NAME##_len)
 
-namespace BridgeApiCL {
-  bool Initialized = false;
-  PFN_bridgeapi_RegisterEndSceneCallback GameCallback = nullptr;
+namespace remix_api {
+  bool interfaceInitialized = false;
+  PFN_bridgeapi_RegisterEndSceneCallback interfaceGameCallback = nullptr;
 }
 
 namespace {
@@ -228,9 +228,6 @@ namespace {
       ClientMessage c(Commands::Api_CreateTriangleMesh);
       currentUID = c.get_uid();
 
-      //Logger::debug("[BridgeApi-CL] CreateTriangleMesh ::");
-      //Logger::debug("|> surface_count = " + std::to_string(info->surfaces_count));
-
       // MeshInfo
       SEND_STYPE(c, info->sType);
       SEND_U64(c, info->hash);
@@ -240,10 +237,8 @@ namespace {
       for (uint32_t s = 0u; s < info->surfaces_count; s++) 
       {
         const auto& surf = info->surfaces_values[s];
-        //Logger::debug("|> surface " + std::to_string(s));
-
+       
         // send vertices of the current surface
-        //Logger::debug("|>> vertex count " + std::to_string(surf.vertices_count));
         SEND_U64(c, surf.vertices_count); // send vertex count before vertices
         for (uint64_t v = 0u; v < surf.vertices_count; v++)
         {
@@ -260,7 +255,6 @@ namespace {
         }
 
         // send indices of the current surface
-        //Logger::debug("|>> index count " + std::to_string(surf.indices_count));
         SEND_U64(c, surf.indices_count); // send index count before indices
         for (uint64_t i = 0u; i < surf.indices_count; i++) {
           SEND_U32(c, surf.indices_values[i]);
@@ -271,8 +265,6 @@ namespace {
 
         // using remixapi_MaterialHandle is unpractical and kinda unsafe because its only 4 bytes <here> (ptr)
         // so user would have to send an actual pointer instead of the uint64_t hash val 
-        //Logger::debug("[BridgeApi-CL] RemixApi::CreateTriangleMesh() sending material u32 [" + std::to_string((uint32_t) surf.material) + "]");
-        //Logger::debug("[BridgeApi-CL] RemixApi::CreateTriangleMesh() sending material u64 [" + std::to_string((uint64_t) surf.material) + "]");
         SEND_U64(c, surf.material);
       }
     }
@@ -468,7 +460,6 @@ namespace {
       ClientMessage c(Commands::Api_SetConfigVariable);
       c.send_data((uint32_t) strlen(var), var);
       c.send_data((uint32_t) strlen(value), value);
-     // Logger::debug("Send var: " + std::string(var) + " (" + std::to_string((uint32_t) strlen(var)) + ") --- with value: " + std::string(value) + " (" + std::to_string((uint32_t) strlen(value)) + ")");
     }
   }
 
@@ -477,7 +468,7 @@ namespace {
   }
 
   BRIDGE_API void bridgeapi_RegisterEndSceneCallback(PFN_bridgeapi_RegisterEndSceneCallback callback) {
-    BridgeApiCL::GameCallback = callback;
+    remix_api::interfaceGameCallback = callback;
   }
 
   extern "C" {
@@ -508,7 +499,7 @@ namespace {
       }
 
       *out_result = interf;
-      BridgeApiCL::Initialized = true;
+      remix_api::interfaceInitialized = true;
 
       return BRIDGEAPI_ERROR_CODE_SUCCESS;
     }

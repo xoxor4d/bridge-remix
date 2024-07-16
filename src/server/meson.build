@@ -26,7 +26,6 @@ server_src = files([
 ])
 
 server_header = files([
-	'bridge_api.h',
 	'module_processing.h',
 	'server_options.h'
 ])

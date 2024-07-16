@@ -53,7 +53,6 @@
 #include <atomic>
 
 #include "remix_api/remix_c.h"
-#include "bridge_api.h"
 #include "../client/client_options.h"
 
 using namespace Commands;
@@ -101,31 +100,36 @@ using namespace bridge_util;
             const auto& name = map[name##Handle]; \
             assert(name != NULL)
 
-#define NVPULL_STYPE() (remixapi_StructType) DeviceBridge::get_data()
-#define NVPULL_I() (int32_t) DeviceBridge::get_data()
-#define NVPULL_U32() (uint32_t) DeviceBridge::get_data()
+namespace {
+  remixapi_StructType pullSType() {
+    return (remixapi_StructType) DeviceBridge::get_data();
+  }
 
-#define NVPULL_U64(DEST) { \
-            uint64_t* r = nullptr; \
-            uint32_t s = DeviceBridge::get_data((void**)&r); \
-            assert(s == 0 || sizeof(uint64_t) == s); \
-            (DEST) = *r; \
-            }
+  int32_t pullInt() {
+    return (int32_t) DeviceBridge::get_data();
+  }
 
-// std::wstring --- remixapi_Path
-// make sure that TEMP does not go out of scope before calling the api function
-#define NVPULL_PATH(TEMP, DEST) { \
-            wchar_t* t = nullptr; \
-            const uint32_t len = DeviceBridge::getReaderChannel().data->pull((void**) &t) / sizeof(wchar_t); \
-            (TEMP) = std::wstring(t, len); \
-            (DEST) = (TEMP).c_str(); \
-            }
+  uint32_t pullUInt32() {
+    return (uint32_t) DeviceBridge::get_data();
+  }
 
-#define NVPULL_DATA(DEST) DeviceBridge::getReaderChannel().data->pull((void**) &(DEST));
-#define NVPULL_FLOAT() *(float*)(&DeviceBridge::get_data())
-#define NVPULL_FLOAT2D() { NVPULL_FLOAT(), NVPULL_FLOAT() }
-#define NVPULL_FLOAT3D() { NVPULL_FLOAT(), NVPULL_FLOAT(), NVPULL_FLOAT() }
-#define NVPULL_FLOAT4D() { NVPULL_FLOAT(), NVPULL_FLOAT(), NVPULL_FLOAT(), NVPULL_FLOAT() }
+  uint64_t pullUInt64() {
+    uint64_t* r = nullptr;
+    uint32_t s = DeviceBridge::get_data((void**) &r);
+    assert(s == 0 || sizeof(uint64_t) == s);
+    return *r;
+  }
+
+  std::wstring pullPath() {
+    wchar_t* t = nullptr; 
+    const uint32_t len = DeviceBridge::getReaderChannel().data->pull((void**) &t) / sizeof(wchar_t);
+    return std::wstring(t, len);
+  }
+
+  float pullFloat() {
+    return *(float*)&DeviceBridge::get_data();
+  }
+}
 
 // NOTE: MSDN states HWNDs are safe to cross x86-->x64 boundary, and that a truncating cast should be used:
 // https://docs.microsoft.com/en-us/windows/win32/winprog64/interprocess-communication?redirectedfrom=MSDN
@@ -2720,14 +2724,14 @@ void ProcessDeviceCommandQueue() {
         std::wstring albedo {}, normal {}, tangent {}, emissive {}, rough {}, metal {}, height {}, sstrans {}, ssthick {}, ssscatter {};
         remixapi_MaterialInfo info = {};
         {
-          info.sType = NVPULL_STYPE();
-          NVPULL_U64(info.hash);
-          NVPULL_PATH(albedo, info.albedoTexture);
-          NVPULL_PATH(normal, info.normalTexture);
-          NVPULL_PATH(tangent, info.tangentTexture);
-          NVPULL_PATH(emissive, info.emissiveTexture);
-          info.emissiveIntensity = NVPULL_FLOAT();
-          info.emissiveColorConstant = NVPULL_FLOAT3D();
+          info.sType = pullSType();
+          info.hash = pullUInt64();
+          albedo = pullPath(); info.albedoTexture = albedo.c_str();
+          normal = pullPath(); info.normalTexture = normal.c_str();
+          tangent = pullPath(); info.tangentTexture = tangent.c_str();
+          emissive = pullPath(); info.emissiveTexture = emissive.c_str();
+          info.emissiveIntensity = pullFloat();
+          info.emissiveColorConstant = { pullFloat(), pullFloat(), pullFloat() };
           info.spriteSheetRow = (uint8_t) DeviceBridge::get_data();
           info.spriteSheetCol = (uint8_t) DeviceBridge::get_data();
           info.spriteSheetFps = (uint8_t) DeviceBridge::get_data();
@@ -2738,50 +2742,49 @@ void ProcessDeviceCommandQueue() {
 
         remixapi_MaterialInfoOpaqueEXT ext = {};
         {
-          ext.sType = NVPULL_STYPE();
-          NVPULL_PATH(rough, ext.roughnessTexture);
-          NVPULL_PATH(metal, ext.metallicTexture);
-          ext.anisotropy = NVPULL_FLOAT();
-          ext.albedoConstant = NVPULL_FLOAT3D();
-          ext.opacityConstant = NVPULL_FLOAT();
-          ext.roughnessConstant = NVPULL_FLOAT();
-          ext.metallicConstant = NVPULL_FLOAT();
-          ext.thinFilmThickness_hasvalue = NVPULL_U32();
-          ext.thinFilmThickness_value = NVPULL_FLOAT();
-          ext.alphaIsThinFilmThickness = NVPULL_U32();
-          NVPULL_PATH(height, ext.heightTexture);
-          ext.heightTextureStrength = NVPULL_FLOAT();
-          ext.useDrawCallAlphaState = NVPULL_U32(); // If true, InstanceInfoBlendEXT is used as a source for alpha state
-          ext.blendType_hasvalue = NVPULL_U32();
-          ext.blendType_value = NVPULL_I();
-          ext.invertedBlend = NVPULL_U32();
-          ext.alphaTestType = NVPULL_I();
+          ext.sType = pullSType();
+          rough = pullPath(); ext.roughnessTexture = rough.c_str();
+          metal = pullPath(); ext.metallicTexture = metal.c_str();
+          ext.anisotropy = pullFloat();
+          ext.albedoConstant = { pullFloat(), pullFloat(), pullFloat() };
+          ext.opacityConstant = pullFloat();
+          ext.roughnessConstant = pullFloat();
+          ext.metallicConstant = pullFloat();
+          ext.thinFilmThickness_hasvalue = pullUInt32();
+          ext.thinFilmThickness_value = pullFloat();
+          ext.alphaIsThinFilmThickness = pullUInt32();
+          height = pullPath(); ext.heightTexture = height.c_str();
+          ext.heightTextureStrength = pullFloat();
+          ext.useDrawCallAlphaState = pullUInt32(); // If true, InstanceInfoBlendEXT is used as a source for alpha state
+          ext.blendType_hasvalue = pullUInt32();
+          ext.blendType_value = pullInt();
+          ext.invertedBlend = pullUInt32();
+          ext.alphaTestType = pullInt();
           ext.alphaReferenceValue = (uint8_t) DeviceBridge::get_data();
         }
 
         remixapi_MaterialInfoOpaqueSubsurfaceEXT ext_ss = {};
-        const remixapi_Bool has_ss = NVPULL_U32();
-        if (has_ss) {
-          ext_ss.sType = NVPULL_STYPE();
-          NVPULL_PATH(sstrans, ext_ss.subsurfaceTransmittanceTexture);
-          NVPULL_PATH(ssthick, ext_ss.subsurfaceThicknessTexture);
-          NVPULL_PATH(ssscatter, ext_ss.subsurfaceSingleScatteringAlbedoTexture);
-          ext_ss.subsurfaceTransmittanceColor = NVPULL_FLOAT3D();
-          ext_ss.subsurfaceMeasurementDistance = NVPULL_FLOAT();
-          ext_ss.subsurfaceSingleScatteringAlbedo = NVPULL_FLOAT3D();
-          ext_ss.subsurfaceVolumetricAnisotropy = NVPULL_FLOAT();
+        const remixapi_Bool has_subsurface = pullUInt32();
+        if (has_subsurface) {
+          ext_ss.sType = pullSType();
+          sstrans = pullPath(); ext_ss.subsurfaceTransmittanceTexture = sstrans.c_str();
+          ssthick = pullPath(); ext_ss.subsurfaceThicknessTexture = ssthick.c_str();
+          ssscatter = pullPath(); ext_ss.subsurfaceSingleScatteringAlbedoTexture = ssscatter.c_str();
+          ext_ss.subsurfaceTransmittanceColor = { pullFloat(), pullFloat(), pullFloat() };
+          ext_ss.subsurfaceMeasurementDistance = pullFloat();
+          ext_ss.subsurfaceSingleScatteringAlbedo = { pullFloat(), pullFloat(), pullFloat() };
+          ext_ss.subsurfaceVolumetricAnisotropy = pullFloat();
 
           // MaterialInfo -> OpaqueSubsurfaceEXT -> OpaqueEXT
           ext_ss.pNext = &ext;
           info.pNext = &ext_ss;
-        } else { // no subsurface
+        } else {
           info.pNext = &ext; // MaterialInfo -> OpaqueEXT
         }
 
         remixapi_MaterialHandle temp_handle = nullptr;
-        /*auto s =*/ BridgeApiSV::g_remix.CreateMaterial(&info, &temp_handle);
-        //Logger::debug("[BridgeApi-SV] RemixApi::CreateMaterial() returned status [" + std::to_string(s) + "]");
-
+        remix_api::g_remix.CreateMaterial(&info, &temp_handle);
+        
         ServerMessage c(Commands::Bridge_Response, currentUID);
         c.send_data(sizeof(uint64_t), &temp_handle);
         break;
@@ -2792,15 +2795,15 @@ void ProcessDeviceCommandQueue() {
         std::wstring albedo {}, normal {}, tangent {}, emissive {}, transmittance {};
         remixapi_MaterialInfo info = {};
         {
-          info.sType = NVPULL_STYPE();
-          NVPULL_U64(info.hash);
-          NVPULL_PATH(albedo, info.albedoTexture);
-          NVPULL_PATH(normal, info.normalTexture);
-          NVPULL_PATH(tangent, info.tangentTexture);
-          NVPULL_PATH(emissive, info.emissiveTexture);
+          info.sType = pullSType();
+          info.hash = pullUInt64();
+          albedo = pullPath(); info.albedoTexture = albedo.c_str();
+          normal = pullPath(); info.normalTexture = normal.c_str();
+          tangent = pullPath(); info.tangentTexture = tangent.c_str();
+          emissive = pullPath(); info.emissiveTexture = emissive.c_str();
 
-          info.emissiveIntensity = NVPULL_FLOAT();
-          info.emissiveColorConstant = NVPULL_FLOAT3D();
+          info.emissiveIntensity = pullFloat();
+          info.emissiveColorConstant = { pullFloat(), pullFloat(), pullFloat() };
           info.spriteSheetRow = (uint8_t) DeviceBridge::get_data();
           info.spriteSheetCol = (uint8_t) DeviceBridge::get_data();
           info.spriteSheetFps = (uint8_t) DeviceBridge::get_data();
@@ -2811,23 +2814,22 @@ void ProcessDeviceCommandQueue() {
 
         remixapi_MaterialInfoTranslucentEXT ext = {};
         {
-          ext.sType = NVPULL_STYPE();
-          NVPULL_PATH(transmittance, ext.transmittanceTexture);
-          ext.refractiveIndex = NVPULL_FLOAT();
-          ext.transmittanceColor = NVPULL_FLOAT3D();
-          ext.transmittanceMeasurementDistance = NVPULL_FLOAT();
-          ext.thinWallThickness_hasvalue = NVPULL_U32();
-          ext.thinWallThickness_value = NVPULL_FLOAT();
-          ext.useDiffuseLayer = NVPULL_U32();
+          ext.sType = pullSType();
+          transmittance = pullPath(); ext.transmittanceTexture = transmittance.c_str();
+          ext.refractiveIndex = pullFloat();
+          ext.transmittanceColor = { pullFloat(), pullFloat(), pullFloat() };
+          ext.transmittanceMeasurementDistance = pullFloat();
+          ext.thinWallThickness_hasvalue = pullUInt32();
+          ext.thinWallThickness_value = pullFloat();
+          ext.useDiffuseLayer = pullUInt32();
         }
 
         // assign ext
         info.pNext = &ext;
 
         remixapi_MaterialHandle temp_handle = nullptr;
-        /*auto s =*/ BridgeApiSV::g_remix.CreateMaterial(&info, &temp_handle);
-        //Logger::debug("[BridgeApi-SV] RemixApi::CreateMaterial() returned status [" + std::to_string(s) + "]");
-
+        remix_api::g_remix.CreateMaterial(&info, &temp_handle);
+        
         ServerMessage c(Commands::Bridge_Response, currentUID);
         c.send_data(sizeof(uint64_t), &temp_handle);
         break;
@@ -2838,15 +2840,15 @@ void ProcessDeviceCommandQueue() {
         std::wstring albedo {}, normal {}, tangent {}, emissive {};
         remixapi_MaterialInfo info = {};
         {
-          info.sType = NVPULL_STYPE();
-          NVPULL_U64(info.hash);
-          NVPULL_PATH(albedo, info.albedoTexture);
-          NVPULL_PATH(normal, info.normalTexture);
-          NVPULL_PATH(tangent, info.tangentTexture);
-          NVPULL_PATH(emissive, info.emissiveTexture);
+          info.sType = pullSType();
+          info.hash = pullUInt64();
+          albedo = pullPath(); info.albedoTexture = albedo.c_str();
+          normal = pullPath(); info.normalTexture = normal.c_str();
+          tangent = pullPath(); info.tangentTexture = tangent.c_str();
+          emissive = pullPath(); info.emissiveTexture = emissive.c_str();
 
-          info.emissiveIntensity = NVPULL_FLOAT();
-          info.emissiveColorConstant = NVPULL_FLOAT3D();
+          info.emissiveIntensity = pullFloat();
+          info.emissiveColorConstant = { pullFloat(), pullFloat(), pullFloat() };
           info.spriteSheetRow = (uint8_t) DeviceBridge::get_data();
           info.spriteSheetCol = (uint8_t) DeviceBridge::get_data();
           info.spriteSheetFps = (uint8_t) DeviceBridge::get_data();
@@ -2857,18 +2859,17 @@ void ProcessDeviceCommandQueue() {
 
         remixapi_MaterialInfoPortalEXT ext = {};
         {
-          ext.sType = NVPULL_STYPE();
+          ext.sType = pullSType();
           ext.rayPortalIndex = (uint8_t) DeviceBridge::get_data();
-          ext.rotationSpeed = NVPULL_FLOAT();
+          ext.rotationSpeed = pullFloat();
         }
 
         // assign ext
         info.pNext = &ext;
 
         remixapi_MaterialHandle temp_handle = nullptr;
-        /*auto s =*/ BridgeApiSV::g_remix.CreateMaterial(&info, &temp_handle);
-        //Logger::debug("[BridgeApi-SV] RemixApi::CreateMaterial() returned status [" + std::to_string(s) + "]");
-
+        remix_api::g_remix.CreateMaterial(&info, &temp_handle);
+        
         ServerMessage c(Commands::Bridge_Response, currentUID);
         c.send_data(sizeof(uint64_t), &temp_handle);
         break;
@@ -2876,13 +2877,12 @@ void ProcessDeviceCommandQueue() {
 
       case Api_DestroyMaterial:
       {
-        uint64_t material_handle = 0u; NVPULL_U64(material_handle);
+        uint64_t material_handle = pullUInt64();
 
         if (material_handle) {
-          /*auto s =*/ BridgeApiSV::g_remix.DestroyMaterial((remixapi_MaterialHandle) material_handle);
-          //Logger::debug("[BridgeApi-SV] RemixApi::DestroyMaterial() returned status [" + std::to_string(s) + "]");
+          remix_api::g_remix.DestroyMaterial((remixapi_MaterialHandle) material_handle);
         } else {
-          Logger::debug("[BridgeApi-SV] DestroyMaterial(): Invalid material_handle");
+          Logger::debug("[RemixApi] DestroyMaterial(): Invalid material handle");
         }
         break;
       }
@@ -2891,9 +2891,9 @@ void ProcessDeviceCommandQueue() {
       {
         remixapi_MeshInfo info = {};
         {
-          info.sType = NVPULL_STYPE();
-          NVPULL_U64(info.hash);
-          info.surfaces_count = NVPULL_U32(); // surface count before surfaces
+          info.sType = pullSType();
+          info.hash = pullUInt64();
+          info.surfaces_count = pullUInt32(); // surface count before surfaces
         }
 
         std::vector<remixapi_MeshInfoSurfaceTriangles> surfs;
@@ -2906,50 +2906,45 @@ void ProcessDeviceCommandQueue() {
           // pull all vertices
           verts.emplace_back(); // add new vector entry for current surface
 
-          uint64_t vertex_count = 0u; NVPULL_U64(vertex_count);
+          uint64_t vertex_count = pullUInt64();
           for (uint64_t v = 0u; v < vertex_count; v++) {
             verts.back().emplace_back(remixapi_HardcodedVertex
             {
-              NVPULL_FLOAT3D(), // position
-              NVPULL_FLOAT3D(), // normal
-              NVPULL_FLOAT2D(), // texcoord
-              NVPULL_U32()      // color
+              { pullFloat(), pullFloat(), pullFloat() }, // position
+              { pullFloat(), pullFloat(), pullFloat() }, // normal
+              { pullFloat(), pullFloat() },              // texcoord
+              pullUInt32()                               // color
             });
           }
 
           // pull all indices
           indices.emplace_back(); // add new vector entry for current surface
 
-          uint64_t index_count = 0u; NVPULL_U64(index_count);
+          uint64_t index_count = pullUInt64();
           for (uint64_t i = 0u; i < index_count; i++) {
-            indices.back().emplace_back(NVPULL_U32());
+            indices.back().emplace_back(pullUInt32());
           }
 
-          uint32_t skinning_hasvalue = NVPULL_U32();
-          uint64_t material_handle = 0u; NVPULL_U64(material_handle)
+          uint32_t skinning_hasvalue = pullUInt32();
+          uint64_t material_handle = pullUInt64();
 
-            //Logger::debug("[BridgeApi-SV] RemixApi::CreateTriangleMesh() handle u32 [" + std::to_string((uint32_t)material_handle) + "]");
-            //Logger::debug("[BridgeApi-SV] RemixApi::CreateTriangleMesh() handle u64 [" + std::to_string((uint64_t) material_handle) + "]");
-
-            // build the surface struct
-            surfs.emplace_back(remixapi_MeshInfoSurfaceTriangles
-            {
-              verts.back().data(),
-              vertex_count,
-              indices.back().data(),
-              index_count,
-              skinning_hasvalue,
-              remixapi_MeshInfoSkinning {},
-              (remixapi_MaterialHandle) material_handle
-            });
+          // build the surface struct
+          surfs.emplace_back(remixapi_MeshInfoSurfaceTriangles {
+            verts.back().data(),
+            vertex_count,
+            indices.back().data(),
+            index_count,
+            skinning_hasvalue,
+            remixapi_MeshInfoSkinning {},
+            (remixapi_MaterialHandle) material_handle
+          });
         }
 
         // remixapi_MeshInfo
         info.surfaces_values = surfs.data();
 
         remixapi_MeshHandle temp_handle = nullptr;
-        /*auto s =*/ BridgeApiSV::g_remix.CreateMesh(&info, &temp_handle);
-        //Logger::debug("[BridgeApi-SV] RemixApi::CreateMesh() returned status [" + std::to_string(s) + "]");
+        remix_api::g_remix.CreateMesh(&info, &temp_handle);
 
         ServerMessage c(Commands::Bridge_Response, currentUID);
         c.send_data(sizeof(uint64_t), &temp_handle);
@@ -2958,35 +2953,37 @@ void ProcessDeviceCommandQueue() {
 
       case Api_DestroyMesh:
       {
-        uint64_t mesh_handle = 0u; NVPULL_U64(mesh_handle);
+        uint64_t mesh_handle = pullUInt64();
 
         if (mesh_handle) {
-          /*auto s =*/ BridgeApiSV::g_remix.DestroyMesh((remixapi_MeshHandle) mesh_handle);
-          //Logger::debug("[BridgeApi-SV] RemixApi::DestroyMesh() returned status [" + std::to_string(s) + "]");
+          remix_api::g_remix.DestroyMesh((remixapi_MeshHandle) mesh_handle);
         } else {
-          Logger::debug("[BridgeApi-SV] DestroyMesh(): Invalid mesh_handle");
+          Logger::debug("[RemixApi] DestroyMesh(): Invalid mesh handle");
         }
         break;
       }
 
       case Api_DrawMeshInstance:
       {
-        uint64_t mesh_handle = 0u; NVPULL_U64(mesh_handle);
+        uint64_t mesh_handle = pullUInt64();
 
         remixapi_InstanceInfo inst = {};
         {
           inst.sType = REMIXAPI_STRUCT_TYPE_INSTANCE_INFO;
           inst.categoryFlags = 0;
           inst.mesh = (remixapi_MeshHandle) mesh_handle;
-          inst.transform = { {NVPULL_FLOAT4D(), NVPULL_FLOAT4D(), NVPULL_FLOAT4D()} };
-          inst.doubleSided = NVPULL_U32();
+          inst.transform = {{
+              { pullFloat(), pullFloat(), pullFloat(), pullFloat() },
+              { pullFloat(), pullFloat(), pullFloat(), pullFloat() },
+              { pullFloat(), pullFloat(), pullFloat(), pullFloat() }
+          }};
+          inst.doubleSided = pullUInt32();
         }
 
         if (mesh_handle) {
-          /*auto s =*/ BridgeApiSV::g_remix.DrawInstance(&inst);
-          //Logger::debug("[BridgeApi-SV] RemixApi::DrawInstance(Mesh) returned status [" + std::to_string(s) + "]");
+          remix_api::g_remix.DrawInstance(&inst);
         } else {
-          Logger::debug("[BridgeApi-SV] DrawInstance(): Invalid mesh_handle");
+          Logger::debug("[RemixApi] DrawInstance(): Invalid mesh handle");
         }
         break;
       }
@@ -2995,24 +2992,24 @@ void ProcessDeviceCommandQueue() {
       {
         remixapi_LightInfo l = {};
         {
-          l.sType = NVPULL_STYPE();
-          NVPULL_U64(l.hash);
-          l.radiance = NVPULL_FLOAT3D();
+          l.sType = pullSType();
+          l.hash = pullUInt64();
+          l.radiance = { pullFloat(), pullFloat(), pullFloat() };
         }
 
         remixapi_LightInfoSphereEXT ext = {};
         {
-          ext.sType = NVPULL_STYPE();
+          ext.sType = pullSType();
           ext.pNext = nullptr;
-          ext.position = NVPULL_FLOAT3D();
-          ext.radius = NVPULL_FLOAT();
-          ext.shaping_hasvalue = NVPULL_U32();
+          ext.position = { pullFloat(), pullFloat(), pullFloat() };
+          ext.radius = pullFloat();
+          ext.shaping_hasvalue = pullUInt32();
 
           if (ext.shaping_hasvalue) {
-            ext.shaping_value.direction = NVPULL_FLOAT3D();
-            ext.shaping_value.coneAngleDegrees = NVPULL_FLOAT();
-            ext.shaping_value.coneSoftness = NVPULL_FLOAT();
-            ext.shaping_value.focusExponent = NVPULL_FLOAT();
+            ext.shaping_value.direction = { pullFloat(), pullFloat(), pullFloat() };
+            ext.shaping_value.coneAngleDegrees = pullFloat();
+            ext.shaping_value.coneSoftness = pullFloat();
+            ext.shaping_value.focusExponent = pullFloat();
           }
         }
 
@@ -3020,9 +3017,8 @@ void ProcessDeviceCommandQueue() {
         l.pNext = &ext;
 
         remixapi_LightHandle temp_handle = nullptr;
-        /*auto s =*/ BridgeApiSV::g_remix.CreateLight(&l, &temp_handle);
-        //Logger::debug("[BridgeApi-SV] RemixApi::CreateLight(SphereLight) returned status [" + std::to_string(s) + "]");
-
+        remix_api::g_remix.CreateLight(&l, &temp_handle);
+        
         ServerMessage c(Commands::Bridge_Response, currentUID);
         c.send_data(sizeof(uint64_t), &temp_handle);
         break;
@@ -3032,28 +3028,28 @@ void ProcessDeviceCommandQueue() {
       {
         remixapi_LightInfo l = {};
         {
-          l.sType = NVPULL_STYPE();
-          NVPULL_U64(l.hash);
-          l.radiance = NVPULL_FLOAT3D();
+          l.sType = pullSType();
+          l.hash = pullUInt64();
+          l.radiance = { pullFloat(), pullFloat(), pullFloat() };
         }
 
         remixapi_LightInfoRectEXT ext = {};
         {
-          ext.sType = NVPULL_STYPE();
+          ext.sType = pullSType();
           ext.pNext = nullptr;
-          ext.position = NVPULL_FLOAT3D();
-          ext.xAxis = NVPULL_FLOAT3D();
-          ext.xSize = NVPULL_FLOAT();
-          ext.yAxis = NVPULL_FLOAT3D();
-          ext.ySize = NVPULL_FLOAT();
-          ext.direction = NVPULL_FLOAT3D();
-          ext.shaping_hasvalue = NVPULL_U32();
+          ext.position = { pullFloat(), pullFloat(), pullFloat() };
+          ext.xAxis = { pullFloat(), pullFloat(), pullFloat() };
+          ext.xSize = pullFloat();
+          ext.yAxis = { pullFloat(), pullFloat(), pullFloat() };
+          ext.ySize = pullFloat();
+          ext.direction = { pullFloat(), pullFloat(), pullFloat() };
+          ext.shaping_hasvalue = pullUInt32();
 
           if (ext.shaping_hasvalue) {
-            ext.shaping_value.direction = NVPULL_FLOAT3D();
-            ext.shaping_value.coneAngleDegrees = NVPULL_FLOAT();
-            ext.shaping_value.coneSoftness = NVPULL_FLOAT();
-            ext.shaping_value.focusExponent = NVPULL_FLOAT();
+            ext.shaping_value.direction = { pullFloat(), pullFloat(), pullFloat() };
+            ext.shaping_value.coneAngleDegrees = pullFloat();
+            ext.shaping_value.coneSoftness = pullFloat();
+            ext.shaping_value.focusExponent = pullFloat();
           }
         }
 
@@ -3061,8 +3057,7 @@ void ProcessDeviceCommandQueue() {
         l.pNext = &ext;
 
         remixapi_LightHandle temp_handle = nullptr;
-        /*auto s =*/ BridgeApiSV::g_remix.CreateLight(&l, &temp_handle);
-        //Logger::debug("[BridgeApi-SV] RemixApi::CreateLight(RectLight) returned status [" + std::to_string(s) + "]");
+        remix_api::g_remix.CreateLight(&l, &temp_handle);
 
         ServerMessage c(Commands::Bridge_Response, currentUID);
         c.send_data(sizeof(uint64_t), &temp_handle);
@@ -3073,28 +3068,28 @@ void ProcessDeviceCommandQueue() {
       {
         remixapi_LightInfo l = {};
         {
-          l.sType = NVPULL_STYPE();
-          NVPULL_U64(l.hash);
-          l.radiance = NVPULL_FLOAT3D();
+          l.sType = pullSType();
+          l.hash = pullUInt64();
+          l.radiance = { pullFloat(), pullFloat(), pullFloat() };
         }
 
         remixapi_LightInfoDiskEXT ext = {};
         {
-          ext.sType = NVPULL_STYPE();
+          ext.sType = pullSType();
           ext.pNext = nullptr;
-          ext.position = NVPULL_FLOAT3D();
-          ext.xAxis = NVPULL_FLOAT3D();
-          ext.xRadius = NVPULL_FLOAT();
-          ext.yAxis = NVPULL_FLOAT3D();
-          ext.yRadius = NVPULL_FLOAT();
-          ext.direction = NVPULL_FLOAT3D();
-          ext.shaping_hasvalue = NVPULL_U32();
+          ext.position = { pullFloat(), pullFloat(), pullFloat() };
+          ext.xAxis = { pullFloat(), pullFloat(), pullFloat() };
+          ext.xRadius = pullFloat();
+          ext.yAxis = { pullFloat(), pullFloat(), pullFloat() };
+          ext.yRadius = pullFloat();
+          ext.direction = { pullFloat(), pullFloat(), pullFloat() };
+          ext.shaping_hasvalue = pullUInt32();
 
           if (ext.shaping_hasvalue) {
-            ext.shaping_value.direction = NVPULL_FLOAT3D();
-            ext.shaping_value.coneAngleDegrees = NVPULL_FLOAT();
-            ext.shaping_value.coneSoftness = NVPULL_FLOAT();
-            ext.shaping_value.focusExponent = NVPULL_FLOAT();
+            ext.shaping_value.direction = { pullFloat(), pullFloat(), pullFloat() };
+            ext.shaping_value.coneAngleDegrees = pullFloat();
+            ext.shaping_value.coneSoftness = pullFloat();
+            ext.shaping_value.focusExponent = pullFloat();
           }
         }
 
@@ -3102,8 +3097,7 @@ void ProcessDeviceCommandQueue() {
         l.pNext = &ext;
 
         remixapi_LightHandle temp_handle = nullptr;
-        /*auto s =*/ BridgeApiSV::g_remix.CreateLight(&l, &temp_handle);
-        //Logger::debug("[BridgeApi-SV] RemixApi::CreateLight(DiskLight) returned status [" + std::to_string(s) + "]");
+        remix_api::g_remix.CreateLight(&l, &temp_handle);
 
         ServerMessage c(Commands::Bridge_Response, currentUID);
         c.send_data(sizeof(uint64_t), &temp_handle);
@@ -3114,27 +3108,26 @@ void ProcessDeviceCommandQueue() {
       {
         remixapi_LightInfo l = {};
         {
-          l.sType = NVPULL_STYPE();
-          NVPULL_U64(l.hash);
-          l.radiance = NVPULL_FLOAT3D();
+          l.sType = pullSType();
+          l.hash = pullUInt64();
+          l.radiance = { pullFloat(), pullFloat(), pullFloat() };
         }
 
         remixapi_LightInfoCylinderEXT ext = {};
         {
-          ext.sType = NVPULL_STYPE();
+          ext.sType = pullSType();
           ext.pNext = nullptr;
-          ext.position = NVPULL_FLOAT3D();
-          ext.radius = NVPULL_FLOAT();
-          ext.axis = NVPULL_FLOAT3D();
-          ext.axisLength = NVPULL_FLOAT();
+          ext.position = { pullFloat(), pullFloat(), pullFloat() };
+          ext.radius = pullFloat();
+          ext.axis = { pullFloat(), pullFloat(), pullFloat() };
+          ext.axisLength = pullFloat();
         }
 
         // remixapi_LightInfo
         l.pNext = &ext;
 
         remixapi_LightHandle temp_handle = nullptr;
-        /*auto s =*/ BridgeApiSV::g_remix.CreateLight(&l, &temp_handle);
-        //Logger::debug("[BridgeApi-SV] RemixApi::CreateLight(CylinderLight) returned status [" + std::to_string(s) + "]");
+        remix_api::g_remix.CreateLight(&l, &temp_handle);
 
         ServerMessage c(Commands::Bridge_Response, currentUID);
         c.send_data(sizeof(uint64_t), &temp_handle);
@@ -3145,25 +3138,24 @@ void ProcessDeviceCommandQueue() {
       {
         remixapi_LightInfo l = {};
         {
-          l.sType = NVPULL_STYPE();
-          NVPULL_U64(l.hash);
-          l.radiance = NVPULL_FLOAT3D();
+          l.sType = pullSType();
+          l.hash = pullUInt64();
+          l.radiance = { pullFloat(), pullFloat(), pullFloat() };
         }
 
         remixapi_LightInfoDistantEXT ext = {};
         {
-          ext.sType = NVPULL_STYPE();
+          ext.sType = pullSType();
           ext.pNext = nullptr;
-          ext.direction = NVPULL_FLOAT3D();
-          ext.angularDiameterDegrees = NVPULL_FLOAT();
+          ext.direction = { pullFloat(), pullFloat(), pullFloat() };
+          ext.angularDiameterDegrees = pullFloat();
         }
 
         // remixapi_LightInfo
         l.pNext = &ext;
 
         remixapi_LightHandle temp_handle = nullptr;
-        /*auto s =*/ BridgeApiSV::g_remix.CreateLight(&l, &temp_handle);
-        //Logger::debug("[BridgeApi-SV] RemixApi::CreateLight(DistantLight) returned status [" + std::to_string(s) + "]");
+        remix_api::g_remix.CreateLight(&l, &temp_handle);
 
         ServerMessage c(Commands::Bridge_Response, currentUID);
         c.send_data(sizeof(uint64_t), &temp_handle);
@@ -3172,26 +3164,24 @@ void ProcessDeviceCommandQueue() {
 
       case Api_DestroyLight:
       {
-        uint64_t light_handle = 0u; NVPULL_U64(light_handle);
+        uint64_t light_handle = pullUInt64();
 
         if (light_handle) {
-          /*remixapi_ErrorCode s =*/ BridgeApiSV::g_remix.DestroyLight((remixapi_LightHandle) light_handle);
-          //Logger::debug("[BridgeApi-SV] RemixApi::DestroyLight() returned status [" + std::to_string(s) + "]");
+          remix_api::g_remix.DestroyLight((remixapi_LightHandle) light_handle);
         } else {
-          Logger::debug("[BridgeApi-SV] DestroyLight(): invalid light_handle");
+          Logger::debug("[RemixApi] DestroyLight(): invalid light handle");
         }
         break;
       }
 
       case Api_DrawLightInstance:
       {
-        uint64_t light_handle = 0u; NVPULL_U64(light_handle);
+        uint64_t light_handle = pullUInt64();
 
         if (light_handle) {
-          /*remixapi_ErrorCode s =*/ BridgeApiSV::g_remix.DrawLightInstance((remixapi_LightHandle) light_handle);
-          //Logger::debug("[BridgeApi-SV] RemixApi::DrawLightInstance() returned status [" + std::to_string(s) + "]");
+          remix_api::g_remix.DrawLightInstance((remixapi_LightHandle) light_handle);
         } else {
-          Logger::debug("[BridgeApi-SV] DrawLightInstance(): invalid light_handle");
+          Logger::debug("[RemixApi] DrawLightInstance(): invalid light handle");
         }
         break;
       }
@@ -3210,22 +3200,18 @@ void ProcessDeviceCommandQueue() {
         const uint32_t value_size = DeviceBridge::getReaderChannel().data->pull(&value_ptr);
         std::string value_str((const char*) value_ptr, value_size);
 
-        /*auto s =*/ BridgeApiSV::g_remix.SetConfigVariable(var_str.c_str(), value_str.c_str());
-        //Logger::debug("[BridgeApi-SV] RemixApi::SetConfigVariable() returned status [" + std::to_string(s) + "]");
-        //Logger::debug("|> Config Var: \"" + var_str + "\" with size: " + std::to_string(var_size));
-        //Logger::debug("|> Config Value: \"" + value_str + "\" with size: " + std::to_string(value_size));
+        remix_api::g_remix.SetConfigVariable(var_str.c_str(), value_str.c_str());
         break;
       }
 
       case Api_RegisterDevice:
       {
-        if (BridgeApiSV::IsInitialized()) {
-          //std::lock_guard<std::mutex> device_lock(api::g_device_mutex);
-          if (const auto dev = BridgeApiSV::GetDevice(); dev) {
-            remixapi_ErrorCode r = BridgeApiSV::g_remix.dxvk_RegisterD3D9Device(dev);
-            Logger::info("[BridgeApi-SV] RemixApi::dxvk_RegisterD3D9Device(): " + (!r ? "success" : "error: " + std::to_string(r)));
+        if (remix_api::g_remix_initialized) {
+          if (const auto dev = remix_api::getDevice(); dev) {
+            remixapi_ErrorCode r = remix_api::g_remix.dxvk_RegisterD3D9Device(dev);
+            Logger::info("[RemixApi] dxvk_RegisterD3D9Device(): " + (!r ? "success" : "error: " + std::to_string(r)));
           } else {
-            Logger::warn("[BridgeApi-SV] Failed to get d3d9 device!");
+            Logger::warn("[RemixApi] Failed to get d3d9 device!");
           }
         }
         break;
@@ -3340,13 +3326,13 @@ bool InitializeD3D() {
       Logger::info("D3D9 interface object creation succeeded!");
     }
     // Initialize remixApi
-    if (ClientOptions::getEnableBridgeApi()) {
-      remixapi_ErrorCode status = remixapi_lib_loadRemixDllAndInitialize(L"d3d9.dll", &BridgeApiSV::g_remix, &BridgeApiSV::g_remix_dll);
+    if (ClientOptions::getExposeRemixApi()) {
+      remixapi_ErrorCode status = remixapi_lib_loadRemixDllAndInitialize(L"d3d9.dll", &remix_api::g_remix, &remix_api::g_remix_dll);
       if (status != REMIXAPI_ERROR_CODE_SUCCESS) {
-        Logger::err(format_string("[BridgeApi-SV] RemixApi initialization failed: %d\n", status));
+        Logger::err(format_string("[RemixApi] RemixApi initialization failed: %d\n", status));
       } else {
-        BridgeApiSV::g_remix_initialized = true;
-        Logger::info("[BridgeApi-SV] Initialized RemixApi.");
+        remix_api::g_remix_initialized = true;
+        Logger::info("[RemixApi] Initialized RemixApi.");
       }
     }
   } else {
