@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023, NVIDIA CORPORATION. All rights reserved.
+ * Copyright (c) 2022-2024, NVIDIA CORPORATION. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -37,7 +37,7 @@
 #include "d3d9_volumetexture.h"
 #include "shadow_map.h"
 #include "client_options.h"
-
+#include "swapchain_map.h"
 #include "config/global_options.h"
 
 #include "util_bridge_assert.h"
@@ -59,6 +59,8 @@
   }
 
 extern NamedSemaphore* gpPresent;
+extern std::mutex gSwapChainMapMutex;
+extern SwapChainMap gSwapChainMap;
 
 template<bool EnableSync>
 void Direct3DDevice9Ex_LSS<EnableSync>::onDestroy() {
@@ -420,7 +422,7 @@ HRESULT Direct3DDevice9Ex_LSS<EnableSync>::Reset(D3DPRESENT_PARAMETERS* pPresent
     ResetState();
     const auto presParam = Direct3DSwapChain9_LSS::sanitizePresentationParameters(*pPresentationParameters, getCreateParams());
     // Add a hook into this window if we don't already have it.
-    setWinProc(presParam.hDeviceWindow);
+    setWinProc(getWinProcHwnd());
     // Tell Server to do the Reset
     size_t currentUID = 0;
     {
@@ -441,6 +443,8 @@ HRESULT Direct3DDevice9Ex_LSS<EnableSync>::Reset(D3DPRESENT_PARAMETERS* pPresent
 
     // Reset swapchain and link server backbuffer/depth buffer after the server reset its swapchain, or we will link to the old backbuffer/depth resources
     initImplicitObjects(presParam);
+    // Keeping a track of previous present parameters, to detect and handle mode changes
+    m_previousPresentParams = *pPresentationParameters;
   }
   return res;
 }
@@ -492,16 +496,8 @@ HRESULT Direct3DDevice9Ex_LSS<EnableSync>::Present(CONST RECT* pSourceRect, CONS
   }
 
   // Seeing this in the log could indicate the game is sending inputs to a different window
-  extern std::unordered_map<HWND, std::deque<WNDPROC>> ogWndProcList;
-  extern std::mutex gWndProcListMapMutex;
-  if (hDestWindowOverride != NULL) {
-    std::scoped_lock lock(gWndProcListMapMutex);
-    if(ogWndProcList.find(hDestWindowOverride) == ogWndProcList.end())
-      ONCE(Logger::info("Detected unhooked winproc on Direct3DDevice9::Present"));
-  }
-  const auto hWnd = (hDestWindowOverride != NULL) ? hDestWindowOverride : m_hWnd;
-  if(GetWindowLongPtr(hWnd,GWLP_WNDPROC) != reinterpret_cast<LONG_PTR>(RemixWndProc)) {
-    setWinProc(hWnd, true);
+  if(GetWindowLongPtr(getWinProcHwnd(),GWLP_WNDPROC) != reinterpret_cast<LONG_PTR>(RemixWndProc)) {
+    setWinProc(getWinProcHwnd(), true);
     Logger::warn("Detected non-Remix winproc on Present(), which is indicative of game resetting winproc after device creation. Remix winproc has been re-hooked. If this warning persists and remix GUI is not interactable, further intervention may be necessary.");
   }
 
@@ -3712,7 +3708,18 @@ void Direct3DDevice9Ex_LSS<EnableSync>::initImplicitObjects(const D3DPRESENT_PAR
 template<bool EnableSync>
 void Direct3DDevice9Ex_LSS<EnableSync>::initImplicitSwapchain(const D3DPRESENT_PARAMETERS& presParam) {
   auto* const pLssSwapChain = trackWrapper(new Direct3DSwapChain9_LSS(this, presParam));
+  // To have a more consistent display when toggling windowed mode
+  if (presParam.Windowed != m_previousPresentParams.Windowed && !(m_createParams.BehaviorFlags & D3DCREATE_NOWINDOWCHANGES)) {
+    SetGammaRamp(0, 0, &m_gammaRamp);
+  }
   m_pSwapchain = pLssSwapChain;
+  m_pSwapchain->reset(presParam);
+  {
+    gSwapChainMapMutex.lock();
+    gSwapChainMap[m_pSwapchain->getPresentationParameters().hDeviceWindow] = { m_pSwapchain->getPresentationParameters(), this->getCreateParams(),  m_pSwapchain->getId()};
+    gSwapChainMapMutex.unlock();
+  }
+
   m_implicitRefCnt++;
 }
 
