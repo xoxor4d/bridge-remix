@@ -42,9 +42,9 @@ jobs:
     
     - name: Upload binaries
       uses: actions/upload-artifact@v4
-      include-hidden-files: true
       with:
         name: bridge-remix-${{env.GITHUB_SHA_SHORT}}-${{github.run_number}}-${{matrix.build-flavour}}
+        include-hidden-files: true
         path: |
           _output\*.dll
           _output\*.exe
